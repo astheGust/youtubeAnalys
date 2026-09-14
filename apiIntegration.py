@@ -1,16 +1,24 @@
-from flask import Flask,jsonify,render_template,request
+from flask import Flask,jsonify,send_from_directory,render_template,request
 from flask_cors import CORS
 import requests
 import pandas as pd
 from dotenv import load_dotenv
 import os
+from geminiIntegration import musicsByGenre
 load_dotenv()
-
 youtubeKey = os.getenv("API_KEY")
 app = Flask(__name__)
 CORS(app)
 
 ytbUrl = "https://www.googleapis.com/youtube/v3/playlistItems"
+
+@app.route("/styles.css")
+def styles():
+    return send_from_directory(os.path.join(app.root_path, "."), "styles.css")
+
+@app.route("/logic.js")
+def logic():
+    return send_from_directory(os.path.join(app.root_path, "."), "logic.js")
 
 @app.route("/")
 def home():
@@ -32,27 +40,64 @@ def getDices():
                 req = requests.get(ytbUrl,params=parameters)
                 res = req.json()
                 items = res.get("items",[])
+                privateCount = 0
                 for info in items:
-                    dices = info.get('snippet',{})
+                    dices = info.get('snippet',"")
                     title = dices.get('title',"")
-                    portrait = dices.get('thumbnails',{}).get('medium',{})
+                    portrait = dices.get('thumbnails',"").get('medium',"")
+                    if(isinstance(portrait,str) or not portrait):
+                        privateCount+= 1
+                        continue
                     channel = dices.get('videoOwnerChannelTitle',"")
                     musicInfo.append({"title":title,"portrait":portrait,"channel":channel})
                 nextPage = res.get("nextPageToken","")
                 if not nextPage or nextPage == "":
                     break  
                 nextPageToken = nextPage
+            #limpa de dados
             df = pd.DataFrame(musicInfo)
             df['channel'] = df['channel'].str.replace(' - Topic','',regex = False)
             df['portrait_url'] = df['portrait'].apply(lambda x: x.get('url'))
             df = df.drop(columns=['portrait'])
-            cleanDices = df.to_dict(orient="records") 
-            return jsonify(cleanDices),200
+            listedDices = df.to_dict(orient="records")             
+            channelValues = df["channel"].value_counts()         
+            artists = channelValues.index.tolist()
+            musicCount = channelValues.values.tolist()
+            dices = {
+                "listOfDices": listedDices,
+                "PrivateContent":privateCount,
+                "graphicDices":
+                    {
+                        "labels":artists,
+                        "data":musicCount
+                    }
+            }
+            return jsonify(dices),200
         except requests.exceptions.HTTPError as err:
             print(err)
         except requests.RequestException as err:
             print("Erro de requisição:",err)
             return jsonify({"err":"Erro ao se conectar a api"}),500
-        
+
+@app.route("/genreDices",methods=["POST"])
+def genreDices():
+    genAi = request.json
+    if(genAi != ""):
+        try:
+            genreDict = musicsByGenre(genAi)
+            genPd = pd.Series(list(genreDict.values()))
+            count = genPd.value_counts()
+            labels = count.index.tolist()
+            quantity = count.values.tolist()
+            dices = {
+                "labels":labels,
+                "data":quantity}
+            return jsonify(dices)
+        except requests.exceptions.HTTPError as err:
+            print(err)
+        except requests.RequestException as err:
+            print("Erro de requisição:",err)
+            return jsonify({"err":"Erro ao se conectar a api"}),500        
+
 if __name__ == '__main__':
     app.run(debug=True)

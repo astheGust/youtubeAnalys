@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playlist Análise</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="logic.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script
+      src="https://kit.fontawesome.com/75dd7735cf.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+
+  <body>
+    <main>
+      <section class="search-section">
+        <form id="searchForm" class="search-form" action="#" method="get">
+          <input
+            id="url"
+            type="url"
+            name="url"
+            placeholder="Cole a URL do YouTube aqui..."
+            required
+          />
+          <button type="submit">Analisar</button>
+        </form>
+      </section>
+      <div id="loading"></div>
+      <article id="results" class="results">
+        <section id="resultSection" class="cards-section">
+          <div class="cards-list">
+            <div class="sort-bar">
+              <span class="sort-bar__label">listar por:</span>
+              <div class="sort-menu-wrapper">
+                <button
+                  id="sortToggle"
+                  class="sort-toggle"
+                  type="button"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  aria-controls="sortMenu"
+                >
+                  <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                  <span id="sortToggleText">Padrão</span>
+                  <i
+                    class="fa-solid fa-chevron-down sort-toggle__caret"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+                <div id="sortMenu" class="sort-menu" role="menu" aria-labelledby="sortToggle">
+                  <button
+                    class="sort-menu__item is-active"
+                    type="button"
+                    role="menuitem"
+                    data-sort="default"
+                  >
+                    <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                    <span>Padrão</span>
+                  </button>
+                  <button
+                    class="sort-menu__item"
+                    type="button"
+                    role="menuitem"
+                    data-sort="artist"
+                  >
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    <span>Artista A-Z</span>
+                  </button>
+                  <button
+                    class="sort-menu__item"
+                    type="button"
+                    role="menuitem"
+                    data-sort="music"
+                  >
+                    <i class="fa-solid fa-music" aria-hidden="true"></i>
+                    <span>Música A-Z</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <header class="cards-header">
+              <span class="cards-header__image" aria-hidden="true"></span>
+              <span class="cards-header__title">Título</span>
+              <span class="cards-header__channel">Canal</span>
+            </header>
+            <!-- cards criados dinamicamente via logic.js -->
+          </div>
+        </section>
+        <section class="info-section">
+          <section class="options-section">
+            <span id="optionsTitle">Informações</span>
+            <div id="optionsButton" role="group" aria-labelledby="optionsTitle">
+              <button id="forArt" type="button" class="option-btn">
+                <span>Músicas para Artista</span>
+              </button>
+              <button id="forGen" type="button" class="option-btn">
+                <span> Músicas para Gênero</span>
+              </button>
+            </div>
+          </section>
+          <section class="graphic-data-content" aria-live="polite"></section>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
