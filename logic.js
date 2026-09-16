@@ -8,16 +8,17 @@ const sortMenu = document.getElementById("sortMenu")
 let playlistDices = ""
 let colorPallete = []
 let dices = ""
+// instância do gráfico atual, usada para destruir antes de montar outro
+let graphicChart = null
 if (querySearch) {
     querySearch.addEventListener("submit", async (e) => {
         e.preventDefault()
         let formElements = querySearch.elements
         let urlValue = formElements.namedItem("url").value
         clearContent()
-        //animacao de carregamento
         if (urlValue != "") {
+            //animacao de carregamento
             loading.style.display = "block"
-            console.log(urlValue)
             let playlistId = urlValue.split("list=")[1]
             try {
                 let req = await fetch(`http://127.0.0.1:5000/playlistAnalys?id=${playlistId}`, {
@@ -48,9 +49,9 @@ if (querySearch) {
                     return mscForArt = res.graphicDices
                 }
                 dices = {
-                    list:musicChannel,
-                    mscForArt:res.graphicDices,
-                    genForArt:res2
+                    list: musicChannel,
+                    mscForArt: res.graphicDices,
+                    genForArt: res2
                 }
                 return dices
             } catch (err) {
@@ -64,18 +65,27 @@ if (querySearch) {
 const btnArtMsc = document.getElementById("forArt")
 const btnGenMsc = document.querySelector("#forGen")
 
-btnArtMsc.addEventListener("click", () => {
+btnArtMsc.addEventListener("click", (e) => {
     if (btnArtMsc || dices.mscForArt != "") {
+        e.target.classList.toggle("activeScale")
         mountGraphic(dices.mscForArt)
+        e.target.disabled = true
+        if (btnGenMsc.disabled) {
+            btnGenMsc.classList.toggle("activeScale")
+            btnGenMsc.disabled = false
+        }
     }
 })
 
-btnGenMsc.addEventListener("click", () => {
-    console.log("apenas cliquei")
+btnGenMsc.addEventListener("click", (e) => {
+    e.target.classList.toggle("activeScale")
     if (btnGenMsc || dices.genForArt != "") {
-        console.log("ENTREI AQ")
-        console.log(dices)
         mountGraphic(dices.genForArt)
+        e.target.disabled = true
+        if (btnArtMsc.disabled) {
+            btnArtMsc.classList.toggle("activeScale")
+            btnArtMsc.disabled = false
+        }
     }
 })
 
@@ -188,9 +198,9 @@ function clearContent() {
     const resultSection = document.getElementById("results")
     resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
     if (cardsList) {
-        // remove apenas os cards, preservando o cabeçalho fixo da lista
         cardsList.querySelectorAll(".card").forEach((c) => c.remove())
     }
+    colorPallete = []
     let formElements = querySearch.elements
     let urlElement = formElements.namedItem("url")
     if (urlElement || urlElement != "") {
@@ -229,7 +239,11 @@ function showContent(title, channel, imgSrc) {
 
 function mountGraphic(graphicDices) {
     if (graphicDices) {
-        let mountGraphic
+        if (graphicChart) {
+            graphicChart.destroy()
+            graphicChart = null
+        }
+
         const graphicContainer = document.createElement("div")
         graphicContainer.className = "radialGraphicContainer"
 
@@ -246,10 +260,8 @@ function mountGraphic(graphicDices) {
         graphicContainer.appendChild(chartBox)
         graphicContainer.appendChild(dicesubtitles)
         const ctx = canvasElement.getContext("2d")
-        if (mountGraphic) {
-            mountGraphic.destroy()
-        }
-        mountGraphic = new Chart(ctx, {
+
+        graphicChart = new Chart(ctx, {
             type: "doughnut",
             data: {
                 labels: graphicDices.labels,
@@ -262,7 +274,11 @@ function mountGraphic(graphicDices) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
+                aspectRatio: 1,
+                layout: {
+                    padding: 4,
+                },
                 plugins: {
                     legend: {
                         display: false,
@@ -294,3 +310,34 @@ function mountGraphic(graphicDices) {
         document.querySelector(".graphic-data-content").appendChild(graphicContainer)
     }
 }
+
+//Tema Claro/Escuro
+const THEME_KEY = "playlist-theme"
+const themeToggle = document.getElementById("themeToggle")
+const themeToggleIcon = document.getElementById("themeToggleIcon")
+const themeToggleText = document.getElementById("themeToggleText")
+
+function updateThemeButton(theme) {
+    const isDark = theme === "dark"
+    if (themeToggleIcon) {
+        themeToggleIcon.className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon"
+    }
+    if (themeToggleText) {
+        themeToggleText.textContent = isDark ? "Light" : "Dark"
+    }
+    if (themeToggle) {
+        themeToggle.setAttribute("aria-pressed", String(isDark))
+        themeToggle.title = isDark ? "Mudar para tema claro" : "Mudar para tema escuro"
+    }
+}
+
+if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"
+        document.documentElement.dataset.theme = nextTheme
+        localStorage.setItem(THEME_KEY, nextTheme)
+        updateThemeButton(nextTheme)
+    })
+}
+
+updateThemeButton(document.documentElement.dataset.theme || "light")

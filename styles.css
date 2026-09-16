@@ -3,12 +3,37 @@
     --vermelho-escuro: #b0060d;
     --laranja: #ff6a00;
     --branco: #ffffff;
-    --cinza-claro: #f7f7f8;
-    --cinza-texto: #4a4a4a;
+    --fundo: #ffffff;
+    --superficie: #ffffff;
+    --fundo-card: #f7f7f8;
+    --texto: #4a4a4a;
+    --texto-forte: #222222;
+    --titulo: var(--vermelho-escuro);
+    --linha: rgba(229, 9, 20, 0.15);
+    --linha-forte: rgba(229, 9, 20, 0.35);
     --sombra: 0 4px 14px rgba(229, 9, 20, 0.15);
-
-    /* largura da coluna de miniatura (usada no cabeçalho e nos cards) */
     --card-thumb-w: 120px;
+    --chart-min: 300px;
+}
+
+:root[data-theme="dark"] {
+    --fundo: #101014;
+    --superficie: #17171d;
+    --fundo-card: #1e1e25;
+    --texto: #d6d6de;
+    --texto-forte: #f4f4f7;
+    --titulo: #ff9b86;
+    --linha: rgba(255, 255, 255, 0.10);
+    --linha-forte: rgba(255, 127, 54, 0.40);
+    --sombra: 0 6px 18px rgba(0, 0, 0, 0.55);
+    --vermelho: #ff3f49;
+    --laranja: #ff7f36;
+}
+
+:root[data-theme="dark"] .sort-menu__item.is-active {
+    background: linear-gradient(90deg,
+            rgba(255, 63, 73, 0.24),
+            rgba(255, 127, 54, 0.20));
 }
 
 * {
@@ -20,12 +45,14 @@
 html,
 body {
     height: 100%;
+    background: var(--fundo);
 }
 
 body {
     font-family: "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--branco);
-    color: var(--cinza-texto);
+    background: var(--fundo);
+    color: var(--texto);
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 main {
@@ -56,8 +83,6 @@ main {
     }
 }
 
-/* ===== Seção de pesquisa (topo, centralizada) ===== */
-
 .search-section {
     display: flex;
     justify-content: center;
@@ -77,15 +102,17 @@ main {
     flex: 1;
     padding: 0.8rem 1.2rem;
     font-size: 1rem;
+    background: var(--superficie);
     border: 2px solid var(--vermelho);
     border-radius: 8px;
     outline: none;
-    color: var(--cinza-texto);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--texto);
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.25s;
 }
 
 .search-form input[type="url"]::placeholder {
-    color: #b8b8b8;
+    color: var(--texto);
+    opacity: 0.55;
 }
 
 .search-form input[type="url"]:focus {
@@ -111,7 +138,6 @@ main {
     box-shadow: 0 6px 16px rgba(229, 9, 20, 0.35);
 }
 
-/* ===== Article: duas metades lado a lado ===== */
 #results {
     visibility: hidden;
 }
@@ -127,11 +153,11 @@ main {
 .results>section {
     min-height: 60%;
     border-radius: 8px;
-    border: 2px solid rgba(229, 9, 20, 0.15);
-    background: var(--branco);
+    border: 2px solid var(--linha);
+    background: var(--superficie);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-/* ===== Seção dos cards (esquerda) ===== */
 .cards-section {
     display: flex;
     flex-direction: column;
@@ -140,10 +166,8 @@ main {
     min-height: 60%;
     padding: 0.75rem;
     overflow: hidden;
-    /* o cabeçalho fica fixo e só a lista rola */
 }
 
-/* Lista rolável: recebe o cabeçalho (fixo/sticky) e os cards */
 .cards-list {
     display: flex;
     flex-direction: column;
@@ -154,7 +178,6 @@ main {
     padding-right: 0.25rem;
 }
 
-/* Espaço somente entre cards — o cabeçalho fica colado no topo da lista */
 .cards-list .card+.card {
     margin-top: 0.85rem;
 }
@@ -168,7 +191,6 @@ main {
     border-radius: 4px;
 }
 
-/* ===== Cabeçalho das colunas (acima da lista de cards) ===== */
 .cards-header {
     position: sticky;
     top: 0;
@@ -178,8 +200,8 @@ main {
     align-items: center;
     gap: 0.75rem;
     padding: 0.55rem 0.75rem;
-    background: linear-gradient(180deg, var(--branco) 75%, rgba(229, 9, 20, 0.06));
-    border-bottom: 2px solid rgba(229, 9, 20, 0.28);
+    background: linear-gradient(180deg, var(--superficie) 75%, rgba(229, 9, 20, 0.06));
+    border-bottom: 2px solid var(--linha-forte);
     border-radius: 6px 6px 0 0;
     font-size: 0.78rem;
     font-weight: 700;
@@ -189,7 +211,7 @@ main {
 }
 
 .cards-header__title {
-    color: var(--vermelho-escuro);
+    color: var(--titulo);
 }
 
 .cards-header__channel {
@@ -199,7 +221,6 @@ main {
     white-space: nowrap;
 }
 
-/* ===== Barra de ordenação (canto superior direito da lista) ===== */
 .sort-bar {
     display: flex;
     align-items: center;
@@ -213,7 +234,7 @@ main {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--vermelho-escuro);
+    color: var(--titulo);
     white-space: nowrap;
 }
 
@@ -262,8 +283,8 @@ main {
     display: none;
     flex-direction: column;
     padding: 0.3rem;
-    background: var(--branco);
-    border: 2px solid rgba(229, 9, 20, 0.35);
+    background: var(--superficie);
+    border: 2px solid var(--linha-forte);
     border-radius: 8px;
     box-shadow: 0 8px 22px rgba(229, 9, 20, 0.2);
 }
@@ -281,7 +302,7 @@ main {
     font-family: inherit;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--cinza-texto);
+    color: var(--texto);
     text-align: left;
     background: transparent;
     border: none;
@@ -299,7 +320,7 @@ main {
 
 .sort-menu__item:hover {
     background: rgba(255, 106, 0, 0.12);
-    color: var(--vermelho-escuro);
+    color: var(--titulo);
 }
 
 .sort-menu__item.is-active {
@@ -307,7 +328,7 @@ main {
     background: linear-gradient(90deg,
             rgba(229, 9, 20, 0.08),
             rgba(255, 106, 0, 0.14));
-    color: var(--vermelho-escuro);
+    color: var(--titulo);
     font-weight: 800;
 }
 
@@ -315,7 +336,6 @@ main {
     color: var(--vermelho);
 }
 
-/* ===== Card ===== */
 .card {
     display: grid;
     grid-template-columns: var(--card-thumb-w) minmax(0, 1fr) auto;
@@ -324,9 +344,9 @@ main {
     width: 100%;
     padding: 0.75rem;
     border-radius: 6px;
-    background: var(--cinza-claro);
-    border: 1px solid rgba(229, 9, 20, 0.15);
-    transition: transform 0.15s, box-shadow 0.2s;
+    background: var(--fundo-card);
+    border: 1px solid var(--linha);
+    transition: transform 0.15s, box-shadow 0.2s, background-color 0.25s, border-color 0.25s;
 }
 
 .card:hover {
@@ -361,7 +381,7 @@ main {
     font-size: 0.95rem;
     font-weight: 600;
     line-height: 1.3;
-    color: #222;
+    color: var(--texto-forte);
     overflow-wrap: anywhere;
 }
 
@@ -371,35 +391,40 @@ main {
     font-size: 0.8rem;
     font-weight: 800;
     line-height: 1.3;
-    color: #212;
+    color: var(--texto-forte);
     text-align: right;
     overflow-wrap: anywhere;
 }
 
-/* ===== Seção da opção (direita, botão centralizado) ===== */
 .info-section {
     width: 64%;
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.75rem;
     padding: 1rem;
-
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: info-panel;
 }
 
 .options-section {
     width: 100%;
-    height: 20%;
+    flex: 0 0 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: start;
-    gap: 1rem;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
     border-bottom: 3px solid var(--vermelho);
 }
 
 #optionsTitle {
-    color: var(--vermelho-escuro);
+    color: var(--titulo);
     font-size: 1rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -449,53 +474,81 @@ main {
     filter: brightness(1.07);
 }
 
+.activeScale {
+    animation: animScale 0.25s ease-in-out forwards;
+    transition: scale 0.15s;
+}
+
+@keyframes animScale {
+    from {
+        transform: scale(115%);
+    }
+
+    to {
+        transform: scale(110%);
+    }
+}
+
 .graphic-data-content {
-    height: 80%;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
 }
 
 .radialGraphicContainer {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    align-items: center;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
     gap: 1rem;
     width: 100%;
     height: 100%;
+    min-width: 0;
+    min-height: 0;
     margin: 0 auto;
     padding: 0.5rem;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .chart-box {
     position: relative;
-    width: 100%;
+    flex: 0 0 45%;
     height: 100%;
-    min-width: 0;
-    min-height: 0;
+    min-width: min(var(--chart-min), 100%);
+    min-height: var(--chart-min);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0.25rem;
+    box-sizing: border-box;
 }
 
 .radialGraphic {
-    width: 100% !important;
-    height: 100% !important;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .graphicSub {
     display: flex;
+    flex: 1 1 auto;
     flex-wrap: wrap;
     align-content: flex-start;
     justify-content: flex-start;
     gap: 0.4rem 0.9rem;
-    width: 100%;
+    width: auto;
     height: 100%;
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0.25rem 0.4rem;
     box-sizing: border-box;
 }
@@ -509,9 +562,8 @@ main {
     border-radius: 4px;
 }
 
-/* Cada item de legenda (criado no logic.js) fica limitado à largura da caixa */
 .graphicSub>div {
-    min-width: 200px;
+    min-width: min(200px, 100%);
     max-width: 100%;
 }
 
@@ -519,9 +571,84 @@ main {
     overflow-wrap: anywhere;
 }
 
+.theme-toggle {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.1rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--branco);
+    text-shadow: 0 1px 2px rgba(90, 0, 0, 0.35);
+    background: linear-gradient(135deg, var(--vermelho), var(--laranja));
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(229, 9, 20, 0.35);
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 10px 24px rgba(229, 9, 20, 0.45);
+}
+
+.theme-toggle:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.theme-toggle:focus-visible {
+    outline: 3px solid var(--laranja);
+    outline-offset: 3px;
+}
+
+.theme-toggle i {
+    font-size: 1rem;
+}
+
+/*Layout do gráfico conforme o espaço real do painel*/
+
+@container info-panel (max-width: 520px) {
+    .radialGraphicContainer {
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.6rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .chart-box {
+        flex: 0 1 auto;
+        width: min(100%, 320px);
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
+    }
+
+    .graphicSub {
+        flex: 0 0 auto;
+        width: 100%;
+        height: auto;
+        max-height: 45%;
+    }
+
+    .option-btn {
+        max-width: 100%;
+        white-space: normal;
+    }
+}
+
 /* ===== Responsivo ===== */
 
-/* Telas médias/tablets: mantém as duas colunas lado a lado e ajusta proporção */
 @media (max-width: 1080px) {
     .cards-section {
         width: 42%;
@@ -563,7 +690,6 @@ main {
     }
 }
 
-/* Celulares: empilha tudo em uma coluna */
 @media (max-width: 640px) {
     main {
         height: auto;
@@ -603,7 +729,6 @@ main {
         min-height: auto;
     }
 
-    /* Cards em telas pequenas: miniatura menor e listas contidas */
     .cards-section {
         --card-thumb-w: 96px;
         width: 100%;
@@ -637,7 +762,6 @@ main {
         font-size: 0.72rem;
     }
 
-    /* Painel direito empilha abaixo dos cards */
     .info-section {
         width: 100%;
         height: auto;
@@ -660,35 +784,18 @@ main {
         font-size: 0.95rem;
     }
 
-    /* Gráfico em telas pequenas: empilha e continua contido no bloco */
     .graphic-data-content {
+        flex: 0 0 auto;
         height: auto;
-        min-height: 60vh;
+        min-height: 0;
     }
 
     .radialGraphicContainer {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        align-content: start;
-        width: 100%;
         height: auto;
         max-height: none;
-        overflow-y: auto;
-    }
-
-    .chart-box {
-        width: min(100%, 300px);
-        height: 300px;
-    }
-
-    .graphicSub {
-        width: 100%;
-        height: auto;
-        max-height: 220px;
     }
 }
 
-/* Celulares muito estreitos */
 @media (max-width: 380px) {
     .cards-section {
         --card-thumb-w: 80px;
@@ -712,5 +819,101 @@ main {
 
     .option-btn {
         min-width: 100%;
+    }
+}
+
+@media (min-height: 1081px) {
+    :root {
+        --chart-min: 420px;
+    }
+}
+
+@media (max-height: 700px) {
+    :root {
+        --chart-min: 260px;
+    }
+
+    main {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .search-section {
+        height: auto;
+        padding: 0.75rem 0;
+    }
+
+    .results>section {
+        min-height: auto;
+    }
+
+    .cards-section {
+        max-height: 70vh;
+    }
+
+    .info-section {
+        height: auto;
+        gap: 0.5rem;
+        padding: 0.6rem;
+    }
+
+    .options-section {
+        gap: 0.4rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .option-btn {
+        padding: 0.35rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .graphic-data-content {
+        flex: 0 0 auto;
+        height: auto;
+        padding: 0.25rem 0;
+    }
+
+    .radialGraphicContainer {
+        height: auto;
+        min-height: calc(var(--chart-min) + 1rem);
+    }
+}
+
+@media (max-width: 640px) {
+    :root {
+        --chart-min: 240px;
+    }
+}
+
+@media (max-height: 520px) {
+    .radialGraphicContainer {
+        flex-direction: row;
+        align-items: stretch;
+        overflow-y: hidden;
+    }
+
+    .chart-box {
+        flex: 0 0 45%;
+        width: auto;
+        height: 100%;
+        max-width: none;
+        max-height: 100%;
+        aspect-ratio: auto;
+    }
+
+    .graphicSub {
+        flex: 1 1 auto;
+        width: auto;
+        height: 100%;
+        max-height: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .theme-toggle {
+        right: 0.75rem;
+        bottom: 0.75rem;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.82rem;
     }
 }

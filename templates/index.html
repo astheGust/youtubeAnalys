@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Playlist Análise</title>
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem("playlist-theme") === "dark" ? "dark" : "light";
+    </script>
     <link rel="stylesheet" href="/styles.css" />
     <script src="logic.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -93,10 +97,10 @@
             <span id="optionsTitle">Informações</span>
             <div id="optionsButton" role="group" aria-labelledby="optionsTitle">
               <button id="forArt" type="button" class="option-btn">
-                <span>Músicas para Artista</span>
+                Músicas para Artista
               </button>
               <button id="forGen" type="button" class="option-btn">
-                <span> Músicas para Gênero</span>
+                Músicas para Gênero
               </button>
             </div>
           </section>
@@ -104,5 +108,15 @@
         </section>
       </article>
     </main>
+
+    <button
+      id="themeToggle"
+      class="theme-toggle"
+      type="button"
+      aria-pressed="false"
+    >
+      <i id="themeToggleIcon" class="fa-solid fa-moon" aria-hidden="true"></i>
+      <span id="themeToggleText">Dark</span>
+    </button>
   </body>
 </html>

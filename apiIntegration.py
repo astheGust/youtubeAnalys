@@ -38,6 +38,7 @@ def getDices():
                 if nextPageToken!="":
                     parameters["pageToken"] = nextPageToken
                 req = requests.get(ytbUrl,params=parameters)
+                req.raise_for_status()
                 res = req.json()
                 items = res.get("items",[])
                 privateCount = 0
@@ -74,7 +75,13 @@ def getDices():
             }
             return jsonify(dices),200
         except requests.exceptions.HTTPError as err:
-            print(err)
+            status = err.response.status_code
+            if(status == 403):
+                return jsonify({"err":"Acesso não autorizado ou quota excedida"}),403
+            elif(status == 400):
+                return jsonify({"err":"Valor de parametro inválido"}),400
+            else:
+                return jsonify({"err":"Erro inesperado"}),status
         except requests.RequestException as err:
             print("Erro de requisição:",err)
             return jsonify({"err":"Erro ao se conectar a api"}),500
@@ -93,8 +100,6 @@ def genreDices():
                 "labels":labels,
                 "data":quantity}
             return jsonify(dices)
-        except requests.exceptions.HTTPError as err:
-            print(err)
         except requests.RequestException as err:
             print("Erro de requisição:",err)
             return jsonify({"err":"Erro ao se conectar a api"}),500        
