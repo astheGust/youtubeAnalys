@@ -32,10 +32,10 @@ if (querySearch) {
                     colorPallete.push(getRandomColor())
                     showContent(item.title, item.channel, item.portrait_url)
                 }
-                resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
                 resetSortState()
                 mountGraphic(res.graphicDices)
-                loading.style.display = "none"
+                document.getElementById("forArt").classList.add("activeScale")
+                document.getElementById("forArt").disabled = true
                 let genAi = musicChannel.map(({ portrait_url, ...remains }) => remains)
                 let req2 = await fetch(`http://127.0.0.1:5000/genreDices`, {
                     method: "POST",
@@ -53,6 +53,8 @@ if (querySearch) {
                     mscForArt: res.graphicDices,
                     genForArt: res2
                 }
+                resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
+                loading.style.display = "none"
                 return dices
             } catch (err) {
                 console.log("Erro apresentado:", err)
@@ -63,7 +65,7 @@ if (querySearch) {
 }
 
 const btnArtMsc = document.getElementById("forArt")
-const btnGenMsc = document.querySelector("#forGen")
+const btnGenMsc = document.getElementById("forGen")
 
 btnArtMsc.addEventListener("click", (e) => {
     if (btnArtMsc || dices.mscForArt != "") {
@@ -196,6 +198,7 @@ function getRandomColor() {
 
 function clearContent() {
     const resultSection = document.getElementById("results")
+    const buttonsSection = document.getElementById("optionsButton")
     resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
     if (cardsList) {
         cardsList.querySelectorAll(".card").forEach((c) => c.remove())
@@ -206,6 +209,12 @@ function clearContent() {
     if (urlElement || urlElement != "") {
         urlElement.value = ""
     }
+    for (buttons of buttonsSection.children) {
+        buttons.disabled = false
+        buttons.classList.remove("activeScale")
+    }
+
+
 }
 
 function showContent(title, channel, imgSrc) {

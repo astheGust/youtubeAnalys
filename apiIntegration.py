@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from geminiIntegration import musicsByGenre
+from geminiIntegration import musicsByGenre,asyncProcessInfo
 load_dotenv()
 youtubeKey = os.getenv("API_KEY")
 app = Flask(__name__)
@@ -91,7 +91,7 @@ def genreDices():
     genAi = request.json
     if(genAi != ""):
         try:
-            genreDict = musicsByGenre(genAi)
+            genreDict = asyncProcessInfo(genAi)
             genPd = pd.Series(list(genreDict.values()))
             count = genPd.value_counts()
             labels = count.index.tolist()

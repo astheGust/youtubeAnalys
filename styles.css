@@ -30,12 +30,6 @@
     --laranja: #ff7f36;
 }
 
-:root[data-theme="dark"] .sort-menu__item.is-active {
-    background: linear-gradient(90deg,
-            rgba(255, 63, 73, 0.24),
-            rgba(255, 127, 54, 0.20));
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -65,7 +59,7 @@ main {
 
 #loading {
     display: none;
-    margin: 20px auto 0 auto;
+    margin: 20px auto 0;
     width: 120px;
     height: 120px;
     border-top: 5px solid var(--laranja);
@@ -163,7 +157,6 @@ main {
     flex-direction: column;
     width: 36%;
     min-width: 0;
-    min-height: 60%;
     padding: 0.75rem;
     overflow: hidden;
 }
@@ -171,7 +164,6 @@ main {
 .cards-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -191,14 +183,18 @@ main {
     border-radius: 4px;
 }
 
-.cards-header {
-    position: sticky;
-    top: 0;
-    z-index: 3;
+.cards-header,
+.card {
     display: grid;
     grid-template-columns: var(--card-thumb-w) minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.75rem;
+}
+
+.cards-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     padding: 0.55rem 0.75rem;
     background: linear-gradient(180deg, var(--superficie) 75%, rgba(229, 9, 20, 0.06));
     border-bottom: 2px solid var(--linha-forte);
@@ -336,11 +332,13 @@ main {
     color: var(--vermelho);
 }
 
+:root[data-theme="dark"] .sort-menu__item.is-active {
+    background: linear-gradient(90deg,
+            rgba(255, 63, 73, 0.24),
+            rgba(255, 127, 54, 0.20));
+}
+
 .card {
-    display: grid;
-    grid-template-columns: var(--card-thumb-w) minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
     width: 100%;
     padding: 0.75rem;
     border-radius: 6px;
@@ -355,9 +353,7 @@ main {
 }
 
 .card-thumb {
-    width: var(--card-thumb-w);
     height: 68px;
-    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -402,8 +398,6 @@ main {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
     gap: 0.75rem;
     padding: 1rem;
     overflow: hidden;
@@ -417,7 +411,6 @@ main {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
     border-bottom: 3px solid var(--vermelho);
@@ -443,7 +436,7 @@ main {
     max-width: 50%;
     white-space: nowrap;
     height: fit-content;
-    padding: 0.45rem 1.2rem 0.45rem 1.2rem;
+    padding: 0.45rem 1.2rem;
     font-size: 1.05rem;
     font-weight: 700;
     line-height: 1.2;
@@ -465,7 +458,6 @@ main {
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
     transition: transform 0.15s, filter 0.2s;
 }
 
@@ -510,9 +502,7 @@ main {
     height: 100%;
     min-width: 0;
     min-height: 0;
-    margin: 0 auto;
     padding: 0.5rem;
-    box-sizing: border-box;
     overflow: auto;
 }
 
@@ -527,7 +517,6 @@ main {
     justify-content: center;
     overflow: hidden;
     padding: 0.25rem;
-    box-sizing: border-box;
 }
 
 .radialGraphic {
@@ -541,16 +530,13 @@ main {
     flex: 1 1 auto;
     flex-wrap: wrap;
     align-content: flex-start;
-    justify-content: flex-start;
     gap: 0.4rem 0.9rem;
-    width: auto;
     height: 100%;
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0.25rem 0.4rem;
-    box-sizing: border-box;
 }
 
 .graphicSub::-webkit-scrollbar {
@@ -697,6 +683,10 @@ main {
         padding: 0 0.6rem;
     }
 
+    :root {
+        --chart-min: 240px;
+    }
+
     .search-section {
         height: auto;
         padding: 1rem 0 0.5rem;
@@ -704,18 +694,14 @@ main {
 
     .search-form {
         flex-direction: column;
-        width: 100%;
-        max-width: 100%;
     }
 
     .search-form input[type="url"] {
-        font-size: 1rem;
         padding: 0.7rem 1rem;
     }
 
     .search-form button {
         width: 100%;
-        font-size: 1rem;
     }
 
     .results {
@@ -731,7 +717,6 @@ main {
 
     .cards-section {
         --card-thumb-w: 96px;
-        width: 100%;
         max-height: 58vh;
     }
 
@@ -763,21 +748,15 @@ main {
     }
 
     .info-section {
-        width: 100%;
         height: auto;
         padding: 0.6rem;
     }
 
     .options-section {
-        height: auto;
-        flex-wrap: wrap;
-        gap: 0.75rem;
         padding: 0.5rem 0;
-        border-bottom: 3px solid var(--vermelho);
     }
 
     .option-btn {
-        flex: 1 1 auto;
         min-width: 0;
         white-space: normal;
         padding: 0.75rem 1rem;
@@ -786,13 +765,18 @@ main {
 
     .graphic-data-content {
         flex: 0 0 auto;
-        height: auto;
-        min-height: 0;
     }
 
     .radialGraphicContainer {
         height: auto;
         max-height: none;
+    }
+
+    .theme-toggle {
+        right: 0.75rem;
+        bottom: 0.75rem;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.82rem;
     }
 }
 
@@ -833,26 +817,12 @@ main {
         --chart-min: 260px;
     }
 
-    main {
-        height: auto;
-        min-height: 100vh;
-    }
-
     .search-section {
-        height: auto;
+        height: 20%;
         padding: 0.75rem 0;
     }
 
-    .results>section {
-        min-height: auto;
-    }
-
-    .cards-section {
-        max-height: 70vh;
-    }
-
     .info-section {
-        height: auto;
         gap: 0.5rem;
         padding: 0.6rem;
     }
@@ -867,21 +837,8 @@ main {
         font-size: 0.95rem;
     }
 
-    .graphic-data-content {
-        flex: 0 0 auto;
-        height: auto;
-        padding: 0.25rem 0;
-    }
-
     .radialGraphicContainer {
-        height: auto;
-        min-height: calc(var(--chart-min) + 1rem);
-    }
-}
-
-@media (max-width: 640px) {
-    :root {
-        --chart-min: 240px;
+        padding: 0.25rem;
     }
 }
 
@@ -906,14 +863,5 @@ main {
         width: auto;
         height: 100%;
         max-height: 100%;
-    }
-}
-
-@media (max-width: 640px) {
-    .theme-toggle {
-        right: 0.75rem;
-        bottom: 0.75rem;
-        padding: 0.55rem 0.9rem;
-        font-size: 0.82rem;
     }
 }
