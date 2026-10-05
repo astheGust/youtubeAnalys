@@ -1,16 +1,29 @@
 from flask import Flask,jsonify,send_from_directory,render_template,request
 from flask_cors import CORS
-import requests
+import requests,re
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from geminiIntegration import musicsByGenre,asyncProcessInfo
+from geminiIntegration import processInfo
 load_dotenv()
 youtubeKey = os.getenv("API_KEY")
 app = Flask(__name__)
 CORS(app)
 
 ytbUrl = "https://www.googleapis.com/youtube/v3/playlistItems"
+ytbUrl2 = "https://www.googleapis.com/youtube/v3/videos:batchGetStats"
+
+def format_duration(duration):
+    match = re.fullmatch(
+        r"P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?",
+        duration if isinstance(duration, str) else "",
+    )
+    if not match:
+        return "0:00"
+
+    days, hours, minutes, seconds = (int(value or 0) for value in match.groups())
+    total_seconds = days * 86400 + hours * 3600 + minutes * 60 + seconds
+    return f"{total_seconds // 60}:{total_seconds % 60:02d}"
 
 @app.route("/styles.css")
 def styles():
@@ -24,75 +37,107 @@ def logic():
 def home():
     return render_template("index.html")
 
-@app.route("/playlistAnalys",methods=["GET"])
+@app.route("/playlistAnalys", methods=["GET"])
 def getDices():
-    listId = request.args.get('id',"")
+    listId = request.args.get('id', "")
     if listId != "":
         try:
             musicInfo = []
+            privateCount = 0
             nextPageToken = ""
-            while True: #executa no mínimo uma vez
+            while True:
                 parameters = {
-                    "part":"snippet","playlistId":listId,"key":youtubeKey,"maxResults":50
+                    "part": "snippet", "playlistId": listId, "key": youtubeKey, "maxResults": 50
                 }
-                if nextPageToken!="":
-                    parameters["pageToken"] = nextPageToken
-                req = requests.get(ytbUrl,params=parameters)
+                if nextPageToken != "":
+                    parameters["pageToken"] = nextPageToken  
+                req = requests.get(ytbUrl, params=parameters)
                 req.raise_for_status()
                 res = req.json()
-                items = res.get("items",[])
-                privateCount = 0
+                items = res.get("items", [])
+
+                musicsIds = []
+                page_dict = {}
+                
                 for info in items:
-                    dices = info.get('snippet',"")
-                    title = dices.get('title',"")
-                    portrait = dices.get('thumbnails',"").get('medium',"")
-                    if(isinstance(portrait,str) or not portrait):
-                        privateCount+= 1
+                    dices = info.get('snippet', "")
+                    title = dices.get('title', "")
+                    portrait = dices.get('thumbnails', "").get('medium', "")
+                    if isinstance(portrait, str) or not portrait:
+                        privateCount += 1
                         continue
-                    channel = dices.get('videoOwnerChannelTitle',"")
-                    musicInfo.append({"title":title,"portrait":portrait,"channel":channel})
-                nextPage = res.get("nextPageToken","")
+                    vdId = dices.get('resourceId', "").get('videoId')
+                    musicsIds.append(vdId)
+                    channel = dices.get('videoOwnerChannelTitle', "")
+                    
+                    page_dict[vdId] = {
+                        "title": title,
+                        "portrait": portrait,
+                        "channel": channel
+                    }
+                
+                if musicsIds:
+                    oneStringvdId = ','.join(musicsIds)
+                    req_stats = requests.get(ytbUrl2, params={
+                        "part": "statistics,contentDetails", "key": youtubeKey, "id": oneStringvdId
+                    })
+                    req_stats.raise_for_status()
+                    res_stats = req_stats.json()
+                    stats_items = res_stats.get("items", [])
+                    
+                    for item in stats_items:
+                        vdId = item.get("id")
+                        views = item.get("statistics", "").get("viewCount")
+                        durationStr = item.get("contentDetails", "").get("duration", "")
+                        duration = format_duration(durationStr)
+                        if vdId in page_dict:
+                            page_dict[vdId]["viewsCount"] = views
+                            page_dict[vdId]["duration"] = duration             
+                    musicInfo.extend(page_dict.values())
+                nextPage = res.get("nextPageToken", "")
                 if not nextPage or nextPage == "":
                     break  
                 nextPageToken = nextPage
-            #limpa de dados
+                
             df = pd.DataFrame(musicInfo)
-            df['channel'] = df['channel'].str.replace(' - Topic','',regex = False)
-            df['portrait_url'] = df['portrait'].apply(lambda x: x.get('url'))
+            df['channel'] = df['channel'].str.replace(' - Topic', '', regex=False).str.replace(' Topic', '', regex=False)
+            df['portrait_url'] = df['portrait'].apply(lambda x: x.get('url') if isinstance(x, dict) else "")
             df = df.drop(columns=['portrait'])
-            listedDices = df.to_dict(orient="records")             
-            channelValues = df["channel"].value_counts()         
+            
+            listedDices = df.to_dict(orient="records")
+            channelValues = df["channel"].value_counts()
             artists = channelValues.index.tolist()
             musicCount = channelValues.values.tolist()
+            
             dices = {
                 "listOfDices": listedDices,
-                "PrivateContent":privateCount,
-                "graphicDices":
-                    {
-                        "labels":artists,
-                        "data":musicCount
-                    }
+                "privateContent": privateCount,
+                "graphicDices": {
+                    "labels": artists,
+                    "data": musicCount
+                }
             }
-            return jsonify(dices),200
+            return jsonify(dices), 200
         except requests.exceptions.HTTPError as err:
             status = err.response.status_code
-            if(status == 403):
-                return jsonify({"err":"Acesso não autorizado ou quota excedida"}),403
-            elif(status == 400):
-                return jsonify({"err":"Valor de parametro inválido"}),400
+            if status == 403:
+                return jsonify({"err": "Acesso não autorizado ou quota excedida"}), 403
+            elif status == 400:
+                return jsonify({"err": "Valor de parametro inválido"}), 400
             else:
-                return jsonify({"err":"Erro inesperado"}),status
+                return jsonify({"err": "Erro inesperado"}), status
         except requests.RequestException as err:
-            print("Erro de requisição:",err)
-            return jsonify({"err":"Erro ao se conectar a api"}),500
+            print("Erro de requisição:", err)
+            return jsonify({"err": "Erro ao se conectar a api"}), 500
+    return jsonify({"err": "ID da playlist não fornecido"}), 400
 
-@app.route("/genreDices",methods=["POST"])
+@app.route("/genreDices", methods=["POST"])
 def genreDices():
     genAi = request.json
-    if(genAi != ""):
+    if genAi != "":
         try:
-            genreDict = asyncProcessInfo(genAi)
-            genPd = pd.Series(list(genreDict.values()))
+            genreDict = processInfo(genAi)
+            genPd = pd.Series(genreDict.values())
             count = genPd.value_counts()
             labels = count.index.tolist()
             quantity = count.values.tolist()
@@ -100,9 +145,8 @@ def genreDices():
                 "labels":labels,
                 "data":quantity}
             return jsonify(dices)
-        except requests.RequestException as err:
-            print("Erro de requisição:",err)
-            return jsonify({"err":"Erro ao se conectar a api"}),500        
-
+        except Exception as err:
+            print("Erro ao processar requisição:", err)
+            return jsonify({"err": "Erro ao processar dados da IA"}), 500
 if __name__ == '__main__':
     app.run(debug=True)

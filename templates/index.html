@@ -32,8 +32,16 @@
         </form>
       </section>
       <div id="loading"></div>
+
+      <div id="excludedWarning">
+        <button id="exclamIcon" type="button" aria-label="Mostrar aviso de músicas indisponíveis" aria-expanded="false" aria-controls="excludedCount">
+          <i class="fa-solid fa-exclamation" aria-hidden="true"></i>
+        </button>
+        <span id="excludedCount" aria-hidden="true"></span>
+      </div>
+
       <article id="results" class="results">
-        <section id="resultSection" class="cards-section">
+        <section class="cards-section">
           <div class="cards-list">
             <div class="sort-bar">
               <span class="sort-bar__label">listar por:</span>
@@ -53,7 +61,12 @@
                     aria-hidden="true"
                   ></i>
                 </button>
-                <div id="sortMenu" class="sort-menu" role="menu" aria-labelledby="sortToggle">
+                <div
+                  id="sortMenu"
+                  class="sort-menu"
+                  role="menu"
+                  aria-labelledby="sortToggle"
+                >
                   <button
                     class="sort-menu__item is-active"
                     type="button"
@@ -89,22 +102,46 @@
               <span class="cards-header__title">Título</span>
               <span class="cards-header__channel">Canal</span>
             </header>
-            <!-- cards criados dinamicamente via logic.js -->
           </div>
         </section>
         <section class="info-section">
           <section class="options-section">
-            <span id="optionsTitle">Informações</span>
-            <div id="optionsButton" role="group" aria-labelledby="optionsTitle">
-              <button id="forArt" type="button" class="option-btn">
-                Músicas para Artista
-              </button>
-              <button id="forGen" type="button" class="option-btn">
-                Músicas para Gênero
-              </button>
-            </div>
+            <span id="optionsTitle">Dados</span>
           </section>
-          <section class="graphic-data-content" aria-live="polite"></section>
+          <section class="graphic-data-content" aria-label="Análise da playlist" aria-live="polite">
+            <div class="carousel-viewport">
+              <div id="carouselTrack" class="carousel-track">
+                <section class="carousel-slide" role="group" aria-label="Músicas por artista">
+                  <h2>Músicas por artista</h2>
+                  <div class="chart-content">
+                    <div class="chart-box"><canvas id="artistChart" class="radialGraphic"></canvas></div>
+                    <div id="artistLegend" class="graphicSub"></div>
+                  </div>
+                </section>
+                <section class="carousel-slide" role="group" aria-label="Músicas por gênero" aria-hidden="true">
+                  <h2>Músicas por gênero</h2>
+                  <div class="chart-content">
+                    <div class="chart-box"><canvas id="genreChart" class="radialGraphic"></canvas></div>
+                    <div id="genreLegend" class="graphicSub"></div>
+                  </div>
+                </section>
+                <section class="carousel-slide" role="group" aria-label="Duração das músicas" aria-hidden="true">
+                  <h2>Duração</h2>
+                  <div id="durationExtremes" class="extreme-grid"></div>
+                </section>
+                <section class="carousel-slide" role="group" aria-label="Visualizações das músicas" aria-hidden="true">
+                  <h2>Visualizações</h2>
+                  <div id="viewsExtremes" class="extreme-grid"></div>
+                </section>
+              </div>
+            </div>
+            <nav class="carousel-indicators" aria-label="Navegação pelas seções">
+              <button class="carousel-indicator is-active" type="button" data-slide-index="0" aria-label="Gráfico: músicas por artista" aria-current="step"><span></span></button>
+              <button class="carousel-indicator" type="button" data-slide-index="1" aria-label="Gráfico: músicas por gênero"><span></span></button>
+              <button class="carousel-indicator" type="button" data-slide-index="2" aria-label="Duração maior e menor"><span></span></button>
+              <button class="carousel-indicator" type="button" data-slide-index="3" aria-label="Visualizações maior e menor"><span></span></button>
+            </nav>
+          </section>
         </section>
       </article>
     </main>

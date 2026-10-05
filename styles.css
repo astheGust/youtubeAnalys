@@ -13,7 +13,6 @@
     --linha-forte: rgba(229, 9, 20, 0.35);
     --sombra: 0 4px 14px rgba(229, 9, 20, 0.15);
     --card-thumb-w: 120px;
-    --chart-min: 300px;
 }
 
 :root[data-theme="dark"] {
@@ -132,8 +131,107 @@ main {
     box-shadow: 0 6px 16px rgba(229, 9, 20, 0.35);
 }
 
-#results {
-    visibility: hidden;
+/* Aviso de músicas indisponíveis: informação ancorada à direita do botão, sem afetar o layout */
+#excludedWarning {
+    display: none;
+    position: relative;
+    align-self: flex-start;
+    flex-shrink: 0;
+    width: fit-content;
+    margin: 0 0 0.65rem;
+    z-index: 25;
+}
+
+#excludedWarning.is-visible {
+    display: block;
+}
+
+#exclamIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font: inherit;
+    color: var(--titulo);
+    background: var(--fundo-card);
+    border: 1px solid var(--linha-forte);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+#exclamIcon:hover,
+#exclamIcon[aria-expanded="true"] {
+    background: var(--superficie);
+    border-color: var(--laranja);
+    box-shadow: var(--sombra);
+    transform: translateY(-1px);
+}
+
+#exclamIcon:active {
+    transform: translateY(0);
+}
+
+#exclamIcon:focus-visible {
+    outline: 3px solid var(--laranja);
+    outline-offset: 3px;
+}
+
+/* posicionada fora do fluxo: aparece à direita do botão sem redimensionar nada */
+#excludedCount {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 0.6rem);
+    transform: translateY(-50%);
+    /* width definido (e não auto) para o texto não colapsar na largura do botão */
+    width: max-content;
+    /* 6rem = recuo do main + botão + gap + respiro à direita, para nunca estourar a viewport */
+    max-width: min(360px, calc(100vw - 6rem));
+    padding: 0.8rem 1rem;
+    color: var(--texto-forte);
+    background: var(--superficie);
+    border: 1px solid var(--linha-forte);
+    border-left: 3px solid var(--laranja);
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+#excludedWarning.is-open #excludedCount {
+    display: block;
+    animation: warningReveal 0.25s ease-out both;
+}
+
+@keyframes warningReveal {
+    from {
+        opacity: 0;
+        translate: -4px 0;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #exclamIcon,
+    #exclamIcon:hover,
+    #exclamIcon:active {
+        transform: none;
+    }
+
+    #excludedWarning.is-open #excludedCount {
+        animation: none;
+        translate: none;
+    }
 }
 
 .results {
@@ -142,6 +240,11 @@ main {
     gap: 1.5rem;
     min-height: 0;
     padding-bottom: 1.5rem;
+    visibility: hidden;
+}
+
+.results.is-visible {
+    visibility: visible;
 }
 
 .results>section {
@@ -411,7 +514,6 @@ main {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
     padding-bottom: 0.75rem;
     border-bottom: 3px solid var(--vermelho);
 }
@@ -424,99 +526,74 @@ main {
     letter-spacing: 0.02em;
 }
 
-#optionsButton {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
-.option-btn {
-    width: max-content;
-    min-width: 25%;
-    max-width: 50%;
-    white-space: nowrap;
-    height: fit-content;
-    padding: 0.45rem 1.2rem;
-    font-size: 1.05rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--branco);
-    text-align: left;
-    letter-spacing: 0.04rem;
-    text-shadow: 0 1px 2px rgba(90, 0, 0, 0.35);
-    background: linear-gradient(100deg,
-            var(--vermelho-escuro) 0%,
-            var(--vermelho) 30%,
-            #ff3d00 55%,
-            var(--laranja) 66%,
-            rgba(255, 106, 0, 0.7) 74%,
-            rgba(255, 106, 0, 0.42) 82%,
-            rgba(255, 106, 0, 0.14) 91%,
-            rgba(255, 106, 0, 0) 100%);
-    border: none;
-    border-radius: 10px 0 0 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: transform 0.15s, filter 0.2s;
-}
-
-.option-btn:hover {
-    transform: scale(1.04);
-    filter: brightness(1.07);
-}
-
-.activeScale {
-    animation: animScale 0.25s ease-in-out forwards;
-    transition: scale 0.15s;
-}
-
-@keyframes animScale {
-    from {
-        transform: scale(115%);
-    }
-
-    to {
-        transform: scale(110%);
-    }
-}
-
 .graphic-data-content {
+    position: relative;
     flex: 1 1 auto;
     width: 100%;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.radialGraphicContainer {
+.carousel-viewport {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.carousel-track {
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
-    gap: 1rem;
     width: 100%;
     height: 100%;
     min-width: 0;
     min-height: 0;
+    transition: transform 0.35s ease;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
     padding: 0.5rem;
-    overflow: auto;
+}
+
+.carousel-slide h2 {
+    margin: auto;
+    color: var(--titulo);
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.chart-content {
+    display: flex;
+    flex:auto;
+    margin:auto;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    min-width: 0;
+    min-height: 0;
 }
 
 .chart-box {
     position: relative;
-    flex: 0 0 45%;
-    height: 100%;
-    min-width: min(var(--chart-min), 100%);
-    min-height: var(--chart-min);
+    flex: 0 1 360px;
+    width: min(45%, 360px);
+    min-width: 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 0.25rem;
+    aspect-ratio: 1;
 }
 
 .radialGraphic {
@@ -528,10 +605,10 @@ main {
 .graphicSub {
     display: flex;
     flex: 1 1 auto;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-content: flex-start;
-    gap: 0.4rem 0.9rem;
-    height: 100%;
+    gap: 0.55rem;
+    height: auto;
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
@@ -548,13 +625,142 @@ main {
     border-radius: 4px;
 }
 
-.graphicSub>div {
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     min-width: min(200px, 100%);
     max-width: 100%;
 }
 
 .graphicSub span {
     overflow-wrap: anywhere;
+}
+
+.legend-swatch {
+    flex: 0 0 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.carousel-indicators {
+    display: flex;
+    flex: 0 0 18px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    margin: 0.35rem 0 0.15rem;
+}
+
+.carousel-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: width 0.2s ease;
+}
+
+.carousel-indicator span {
+    display: block;
+    width: 100%;
+    height: 6px;
+    border-radius: 4px;
+    transition: height 0.2s ease, filter 0.2s ease;
+}
+
+.carousel-indicator:nth-child(1) span {
+    background: #e50914;
+}
+
+.carousel-indicator:nth-child(2) span {
+    background: #ff6a00;
+}
+
+.carousel-indicator:nth-child(3) span {
+    background: #16834a;
+}
+
+.carousel-indicator:nth-child(4) span {
+    background: #1677a8;
+}
+
+.carousel-indicator.is-active {
+    width: 62px;
+}
+
+.carousel-indicator.is-active span {
+    height: 9px;
+    filter: saturate(1.15);
+}
+
+.carousel-indicator:focus-visible {
+    outline: 2px solid var(--texto-forte);
+    outline-offset: 2px;
+}
+
+.extreme-grid {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+.extreme-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    width:90%;
+    max-width: 100%;
+    padding: 1rem;
+    background: var(--fundo-card);
+    border: 1px solid var(--linha);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.extreme-label {
+    color: var(--laranja);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.extreme-item h3 {
+    color: var(--texto-forte);
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+}
+
+.extreme-item p,
+.empty-state {
+    color: var(--texto);
+    overflow-wrap: anywhere;
+}
+
+.extreme-item strong {
+    margin-top: auto;
+    color: var(--titulo);
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.analysis-error {
+    color: var(--titulo);
+    text-align: center;
 }
 
 .theme-toggle {
@@ -599,37 +805,23 @@ main {
     font-size: 1rem;
 }
 
-/*Layout do gráfico conforme o espaço real do painel*/
-
 @container info-panel (max-width: 520px) {
-    .radialGraphicContainer {
+    .chart-content {
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        gap: 0.6rem;
-        overflow-x: hidden;
-        overflow-y: auto;
+        gap: 0.5rem;
     }
 
     .chart-box {
-        flex: 0 1 auto;
-        width: min(100%, 320px);
-        height: auto;
+        flex: 0 0 auto;
+        width: min(100%, 280px);
         max-width: 100%;
-        max-height: 100%;
-        aspect-ratio: 1 / 1;
     }
 
     .graphicSub {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         width: 100%;
-        height: auto;
-        max-height: 45%;
-    }
-
-    .option-btn {
-        max-width: 100%;
-        white-space: normal;
+        max-height: 35%;
     }
 }
 
@@ -648,10 +840,6 @@ main {
         font-size: 0.7rem;
     }
 
-    .option-btn {
-        padding: 0.8rem 1.6rem;
-        font-size: 0.95rem;
-    }
 }
 
 @media (max-width: 860px) {
@@ -671,9 +859,6 @@ main {
         height: 22%;
     }
 
-    .option-btn {
-        padding: 0.7rem 1.2rem;
-    }
 }
 
 @media (max-width: 640px) {
@@ -681,10 +866,6 @@ main {
         height: auto;
         min-height: 100vh;
         padding: 0 0.6rem;
-    }
-
-    :root {
-        --chart-min: 240px;
     }
 
     .search-section {
@@ -749,6 +930,7 @@ main {
 
     .info-section {
         height: auto;
+        min-height: 480px;
         padding: 0.6rem;
     }
 
@@ -756,20 +938,8 @@ main {
         padding: 0.5rem 0;
     }
 
-    .option-btn {
-        min-width: 0;
-        white-space: normal;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-    }
-
     .graphic-data-content {
-        flex: 0 0 auto;
-    }
-
-    .radialGraphicContainer {
-        height: auto;
-        max-height: none;
+        flex: 1 1 auto;
     }
 
     .theme-toggle {
@@ -801,22 +971,9 @@ main {
         font-size: 0.6rem;
     }
 
-    .option-btn {
-        min-width: 100%;
-    }
-}
-
-@media (min-height: 1081px) {
-    :root {
-        --chart-min: 420px;
-    }
 }
 
 @media (max-height: 700px) {
-    :root {
-        --chart-min: 260px;
-    }
-
     .search-section {
         height: 20%;
         padding: 0.75rem 0;
@@ -827,41 +984,7 @@ main {
         padding: 0.6rem;
     }
 
-    .options-section {
-        gap: 0.4rem;
-        padding-bottom: 0.5rem;
-    }
-
-    .option-btn {
-        padding: 0.35rem 1rem;
-        font-size: 0.95rem;
-    }
-
-    .radialGraphicContainer {
-        padding: 0.25rem;
-    }
-}
-
-@media (max-height: 520px) {
-    .radialGraphicContainer {
-        flex-direction: row;
-        align-items: stretch;
-        overflow-y: hidden;
-    }
-
     .chart-box {
-        flex: 0 0 45%;
-        width: auto;
-        height: 100%;
-        max-width: none;
-        max-height: 100%;
-        aspect-ratio: auto;
-    }
-
-    .graphicSub {
-        flex: 1 1 auto;
-        width: auto;
-        height: 100%;
-        max-height: 100%;
+        max-width: 260px;
     }
 }

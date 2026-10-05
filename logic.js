@@ -5,92 +5,65 @@ const loading = document.getElementById("loading")
 const sortToggle = document.getElementById("sortToggle")
 const sortToggleText = document.getElementById("sortToggleText")
 const sortMenu = document.getElementById("sortMenu")
-let playlistDices = ""
-let colorPallete = []
-let dices = ""
-// instância do gráfico atual, usada para destruir antes de montar outro
-let graphicChart = null
+const carouselTrack = document.getElementById("carouselTrack")
+const carouselIndicators = document.querySelector(".carousel-indicators")
+let playlistData = []
+let chartInstances = []
+let activeSlide = 0
+
 if (querySearch) {
     querySearch.addEventListener("submit", async (e) => {
         e.preventDefault()
-        let formElements = querySearch.elements
-        let urlValue = formElements.namedItem("url").value
+        const urlValue = querySearch.elements.namedItem("url").value.trim()
         clearContent()
-        if (urlValue != "") {
-            //animacao de carregamento
-            loading.style.display = "block"
-            let playlistId = urlValue.split("list=")[1]
-            try {
-                let req = await fetch(`http://127.0.0.1:5000/playlistAnalys?id=${playlistId}`, {
-                    method: "GET",
-                }
-                )
-                //tratativas de erro e recepção de dados
-                let res = await req.json()
-                let musicChannel = res.listOfDices
-                for (const item of musicChannel) {
-                    colorPallete.push(getRandomColor())
-                    showContent(item.title, item.channel, item.portrait_url)
-                }
-                resetSortState()
-                mountGraphic(res.graphicDices)
-                document.getElementById("forArt").classList.add("activeScale")
-                document.getElementById("forArt").disabled = true
-                let genAi = musicChannel.map(({ portrait_url, ...remains }) => remains)
-                let req2 = await fetch(`http://127.0.0.1:5000/genreDices`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(genAi)
-                })
-                let res2 = await req2.json()
-                if (res2 == "") {
-                    return mscForArt = res.graphicDices
-                }
-                dices = {
-                    list: musicChannel,
-                    mscForArt: res.graphicDices,
-                    genForArt: res2
-                }
-                resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
-                loading.style.display = "none"
-                return dices
-            } catch (err) {
-                console.log("Erro apresentado:", err)
-                return
+        const playlistId = new URL(urlValue).searchParams.get("list")
+        if (!playlistId) {
+            showAnalysisError("A URL não contém o identificador de uma playlist.")
+            return
+        }
+
+        loading.style.display = "block"
+        try {
+            const playlistResponse = await fetch(`http://127.0.0.1:5000/playlistAnalys?id=${encodeURIComponent(playlistId)}`)
+            const playlistResult = await playlistResponse.json()
+            if (!playlistResponse.ok) {
+                throw new Error(playlistResult.err || "Não foi possível analisar a playlist.")
             }
+
+            playlistData = Array.isArray(playlistResult.listOfDices) ? playlistResult.listOfDices : []
+            playlistData.forEach((item) => showContent(item.title, item.channel, item.portrait_url))
+            resetSortState()
+
+            const genreResponse = await fetch("/genreDices", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(playlistData.map(({ portrait, portrait_url, ...item }) => item)),
+            })
+            const genreResult = await genreResponse.json()
+            if (!genreResponse.ok) {
+                throw new Error(genreResult.err || "Não foi possível analisar os gêneros.")
+            }
+
+            renderCarousel(playlistResult.graphicDices, genreResult, playlistData)
+            if (playlistResult.privateContent) {
+                showWarning(`Sua playlist possui ${playlistResult.privateContent} músicas indisponíveis`)
+            }
+            resultSection.classList.add("is-visible")
+        } catch (err) {
+            showAnalysisError(err.message || "Ocorreu um erro ao analisar a playlist.")
+        } finally {
+            loading.style.display = "none"
         }
     })
 }
 
-const btnArtMsc = document.getElementById("forArt")
-const btnGenMsc = document.getElementById("forGen")
-
-btnArtMsc.addEventListener("click", (e) => {
-    if (btnArtMsc || dices.mscForArt != "") {
-        e.target.classList.toggle("activeScale")
-        mountGraphic(dices.mscForArt)
-        e.target.disabled = true
-        if (btnGenMsc.disabled) {
-            btnGenMsc.classList.toggle("activeScale")
-            btnGenMsc.disabled = false
-        }
-    }
-})
-
-btnGenMsc.addEventListener("click", (e) => {
-    e.target.classList.toggle("activeScale")
-    if (btnGenMsc || dices.genForArt != "") {
-        mountGraphic(dices.genForArt)
-        e.target.disabled = true
-        if (btnArtMsc.disabled) {
-            btnArtMsc.classList.toggle("activeScale")
-            btnArtMsc.disabled = false
-        }
-    }
-})
-
+function showAnalysisError(message) {
+    const error = document.createElement("p")
+    error.className = "analysis-error"
+    error.textContent = message
+    document.querySelector(".graphic-data-content").appendChild(error)
+    resultSection.classList.add("is-visible")
+}
 
 function setupSorting() {
     if (!sortToggle || !sortMenu) return
@@ -128,18 +101,8 @@ function closeSortMenu() {
     sortToggle.setAttribute("aria-expanded", "false")
 }
 
-//retorna a lista com os dados das músicas (title) e artistas (channel)
-function getListDices() {
-    if (dices) {
-        return dices.list
-    }
-    console.log("deu errado")
-    return []
-}
-
 function applySort(sortKey = "default") {
-    currentSort = sortKey
-    const list = getListDices()
+    const list = playlistData
     if (list.length === 0) return
 
     const sorted = [...list]
@@ -175,7 +138,6 @@ function applySort(sortKey = "default") {
 }
 
 function resetSortState() {
-    currentSort = "default"
     closeSortMenu()
     if (!sortMenu) return
     const defaultBtn = sortMenu.querySelector('.sort-menu__item[data-sort="default"]')
@@ -188,38 +150,32 @@ function resetSortState() {
 setupSorting()
 
 function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+    const letters = "0123456789ABCDEF"
+    let color = "#"
+    for (let index = 0; index < 6; index++) {
+        color += letters[Math.floor(Math.random() * 16)]
     }
-    return color;
+    return color
 }
 
 function clearContent() {
-    const resultSection = document.getElementById("results")
-    const buttonsSection = document.getElementById("optionsButton")
-    resultSection.style.visibility = (resultSection.style.visibility === "hidden") ? "visible" : "hidden"
+    resetWarning()
+    resultSection.classList.remove("is-visible")
     if (cardsList) {
         cardsList.querySelectorAll(".card").forEach((c) => c.remove())
     }
-    colorPallete = []
-    let formElements = querySearch.elements
-    let urlElement = formElements.namedItem("url")
-    if (urlElement || urlElement != "") {
-        urlElement.value = ""
-    }
-    for (buttons of buttonsSection.children) {
-        buttons.disabled = false
-        buttons.classList.remove("activeScale")
-    }
-
-
+    playlistData = []
+    chartInstances.forEach((chart) => chart.destroy())
+    chartInstances = []
+    document.getElementById("artistLegend").replaceChildren()
+    document.getElementById("genreLegend").replaceChildren()
+    document.querySelector(".graphic-data-content").querySelectorAll(".analysis-error").forEach((error) => error.remove())
+    document.getElementById("durationExtremes").replaceChildren()
+    document.getElementById("viewsExtremes").replaceChildren()
+    updateCarousel(0)
 }
 
 function showContent(title, channel, imgSrc) {
-    const cardsList = document.querySelector(".cards-list")
-
     const card = document.createElement("div")
     card.className = "card"
 
@@ -246,78 +202,183 @@ function showContent(title, channel, imgSrc) {
     cardsList.appendChild(card)
 }
 
-function mountGraphic(graphicDices) {
-    if (graphicDices) {
-        if (graphicChart) {
-            graphicChart.destroy()
-            graphicChart = null
-        }
+function mountGraphic(canvasId, legendId, graphicData) {
+    const labels = Array.isArray(graphicData?.labels) ? graphicData.labels : []
+    const values = Array.isArray(graphicData?.data) ? graphicData.data : []
+    const colors = labels.map(() => getRandomColor())
+    const canvas = document.getElementById(canvasId)
+    const legend = document.getElementById(legendId)
 
-        const graphicContainer = document.createElement("div")
-        graphicContainer.className = "radialGraphicContainer"
-
-        const chartBox = document.createElement("div")
-        chartBox.className = "chart-box"
-
-        const canvasElement = document.createElement("canvas")
-        canvasElement.className = "radialGraphic"
-        chartBox.appendChild(canvasElement)
-
-        const dicesubtitles = document.createElement("div")
-        dicesubtitles.className = "graphicSub"
-
-        graphicContainer.appendChild(chartBox)
-        graphicContainer.appendChild(dicesubtitles)
-        const ctx = canvasElement.getContext("2d")
-
-        graphicChart = new Chart(ctx, {
+    if (labels.length && canvas && window.Chart) {
+        chartInstances.push(new Chart(canvas.getContext("2d"), {
             type: "doughnut",
             data: {
-                labels: graphicDices.labels,
-                datasets: [{
-                    data: graphicDices.data,
-                    backgroundColor: colorPallete,
-                    hoverOffset: 4,
-                    borderWidth: 4,
-                }]
+                labels,
+                datasets: [{ data: values, backgroundColor: colors, hoverOffset: 4, borderWidth: 4 }],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 aspectRatio: 1,
-                layout: {
-                    padding: 4,
-                },
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                },
-            }
-        });
-
-        graphicDices.labels.forEach((channel, index) => {
-            const item = document.createElement("div");
-            item.style.display = "flex";
-            item.style.alignItems = "center";
-            item.style.gap = "6px";
-
-            const quadrado = document.createElement("div");
-            quadrado.style.width = "10px";
-            quadrado.style.height = "10px";
-            quadrado.style.backgroundColor = colorPallete[index];
-            quadrado.style.borderRadius = "4px";
-
-            const texto = document.createElement("span");
-            texto.textContent = `${channel} (${graphicDices.data[index]})`;
-
-            item.appendChild(quadrado);
-            item.appendChild(texto);
-            dicesubtitles.appendChild(item);
-        })
-        document.querySelector(".graphic-data-content").innerHTML = ""
-        document.querySelector(".graphic-data-content").appendChild(graphicContainer)
+                plugins: { legend: { display: false } },
+            },
+        }))
     }
+
+    legend.replaceChildren()
+    labels.forEach((label, index) => {
+        const item = document.createElement("div")
+        item.className = "legend-item"
+        const swatch = document.createElement("span")
+        swatch.className = "legend-swatch"
+        swatch.style.backgroundColor = colors[index]
+        const text = document.createElement("span")
+        text.textContent = `${label} (${values[index] ?? 0})`
+        item.append(swatch, text)
+        legend.appendChild(item)
+    })
+}
+
+function durationToSeconds(duration) {
+    if (typeof duration !== "string") return NaN
+    const normalizedDuration = duration.trim()
+    const isoParts = normalizedDuration.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/)
+    if (isoParts) {
+        const [, hours, minutes, seconds] = isoParts
+        return parseInt(hours || "0", 10) * 3600 + parseInt(minutes || "0", 10) * 60 + parseInt(seconds || "0", 10)
+    }
+    const parts = normalizedDuration.split(":")
+    if (parts.length < 2 || parts.length > 3 || parts.some((part) => !/^\d+$/.test(part))) return NaN
+    const numbers = parts.map((part) => parseInt(part, 10))
+    if (parts.length === 3) return numbers[0] * 3600 + numbers[1] * 60 + numbers[2]
+    return numbers[0] * 60 + numbers[1]
+}
+
+function formatDuration(seconds) {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const remainingSeconds = seconds % 60
+    return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}` : `${minutes}:${String(remainingSeconds).padStart(2, "0")}`
+}
+
+function renderExtremes(containerId, items, valueKey, valueLabel, formatter) {
+    const validItems = items
+        .map((item) => ({ item, value: formatter.parse(item[valueKey]) }))
+        .filter(({ value }) => Number.isFinite(value))
+    const container = document.getElementById(containerId)
+    container.replaceChildren()
+
+    if (!validItems.length) {
+        const emptyState = document.createElement("p")
+        emptyState.className = "empty-state"
+        emptyState.textContent = `Não há dados de ${valueLabel.toLowerCase()} disponíveis.`
+        container.appendChild(emptyState)
+        return
+    }
+
+    const shortest = validItems.reduce((minimum, current) => current.value < minimum.value ? current : minimum)
+    const longest = validItems.reduce((maximum, current) => current.value > maximum.value ? current : maximum)
+    ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
+        const card = document.createElement("article")
+        card.className = "extreme-item"
+        const label = document.createElement("span")
+        label.className = "extreme-label"
+        label.textContent = heading
+        const title = document.createElement("h3")
+        title.textContent = entry.item.title || "Música sem título"
+        const artist = document.createElement("p")
+        artist.textContent = entry.item.channel || "Artista desconhecido"
+        const value = document.createElement("strong")
+        value.textContent = formatter.display(entry.value)
+        card.append(label, title, artist, value)
+        container.appendChild(card)
+    })
+}
+
+function renderCarousel(artistData, genreData, items) {
+    chartInstances.forEach((chart) => chart.destroy())
+    chartInstances = []
+    mountGraphic("artistChart", "artistLegend", artistData)
+    mountGraphic("genreChart", "genreLegend", genreData)
+    renderExtremes("durationExtremes", items, "duration", "duração", {
+        parse: durationToSeconds,
+        display: formatDuration,
+    })
+    renderExtremes("viewsExtremes", items, "viewsCount", "visualizações", {
+        parse: (value) => typeof value === "string" || typeof value === "number" ? parseInt(value, 10) : NaN,
+        display: (value) => new Intl.NumberFormat("pt-BR").format(value),
+    })
+    updateCarousel(0)
+}
+
+function updateCarousel(index) {
+    if (!carouselTrack) return
+    const slides = carouselTrack.querySelectorAll(".carousel-slide")
+    activeSlide = Math.max(0, Math.min(index, slides.length - 1))
+    carouselTrack.style.transform = `translateX(-${activeSlide * 100}%)`
+    slides.forEach((slide, slideIndex) => slide.setAttribute("aria-hidden", String(slideIndex !== activeSlide)))
+    carouselIndicators.querySelectorAll("[data-slide-index]").forEach((indicator, indicatorIndex) => {
+        const isActive = indicatorIndex === activeSlide
+        indicator.classList.toggle("is-active", isActive)
+        if (isActive) indicator.setAttribute("aria-current", "step")
+        else indicator.removeAttribute("aria-current")
+    })
+}
+
+carouselIndicators.addEventListener("click", (event) => {
+    const indicator = event.target.closest("[data-slide-index]")
+    if (indicator) updateCarousel(Number(indicator.dataset.slideIndex))
+})
+
+const divWarning = document.getElementById("excludedWarning")
+const divText = document.getElementById("excludedCount")
+const exclamationIcon = document.getElementById("exclamIcon")
+const WARNING_HIDE_DELAY = 1000
+let warningHideTimer
+
+function cancelWarningHide() {
+    clearTimeout(warningHideTimer)
+}
+
+function isWarningOpen() {
+    return divWarning.classList.contains("is-open")
+}
+
+function setWarningOpen(isOpen) {
+    cancelWarningHide()
+    divWarning.classList.toggle("is-open", isOpen)
+    exclamationIcon.setAttribute("aria-expanded", String(isOpen))
+    divText.setAttribute("aria-hidden", String(!isOpen))
+}
+
+function resetWarning() {
+    setWarningOpen(false)
+    divWarning.classList.remove("is-visible")
+}
+
+function showWarning(message) {
+    resetWarning()
+    divText.innerText = message
+    divWarning.classList.add("is-visible")
+}
+
+function scheduleWarningHide() {
+    cancelWarningHide()
+    if (isWarningOpen()) {
+        warningHideTimer = setTimeout(() => setWarningOpen(false), WARNING_HIDE_DELAY)
+    }
+}
+
+if (exclamationIcon && divWarning && divText) {
+    exclamationIcon.addEventListener("click", () => {
+        if (isWarningOpen()) {
+            setWarningOpen(false)
+        } else {
+            setWarningOpen(true)
+        }
+    })
+    divWarning.addEventListener("mouseenter", cancelWarningHide)
+    divWarning.addEventListener("mouseleave", scheduleWarningHide)
 }
 
 //Tema Claro/Escuro
