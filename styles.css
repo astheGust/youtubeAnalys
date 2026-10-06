@@ -48,6 +48,10 @@ body {
     transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+a {
+    color: var(--texto-forte);
+}
+
 main {
     display: flex;
     flex-direction: column;
@@ -245,6 +249,30 @@ main {
 
 .results.is-visible {
     visibility: visible;
+}
+
+.analyzed-url {
+    min-width: 200px;
+    max-width: 600px;
+    width: fit-content;
+    display: none;
+    flex-shrink: 0;
+    margin-bottom: 0.65rem;
+    padding: 0.75rem 1rem;
+    background: var(--superficie);
+    border: 2px solid var(--linha);
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.analyzed-url.is-visible {
+    display: block;
+}
+
+.analyzed-url a {
+    gap: 10px;
+    display: flex;
 }
 
 .results>section {
@@ -574,8 +602,8 @@ main {
 
 .chart-content {
     display: flex;
-    flex:auto;
-    margin:auto;
+    flex: auto;
+    margin: auto;
     align-items: center;
     justify-content: center;
     gap: 3rem;
@@ -723,7 +751,7 @@ main {
     align-items: center;
     gap: 0.65rem;
     min-width: 0;
-    width:90%;
+    width: 90%;
     max-width: 100%;
     padding: 1rem;
     background: var(--fundo-card);

@@ -10,20 +10,17 @@ youtubeKey = os.getenv("API_KEY")
 app = Flask(__name__)
 CORS(app)
 
-ytbUrl = "https://www.googleapis.com/youtube/v3/playlistItems"
-ytbUrl2 = "https://www.googleapis.com/youtube/v3/videos:batchGetStats"
+ytbPlaylistInfo = "https://www.googleapis.com/youtube/v3/playlists"
+ytbPlaylistItems = "https://www.googleapis.com/youtube/v3/playlistItems"
+ytbVideosInfo = "https://www.googleapis.com/youtube/v3/videos:batchGetStats"
 
 def format_duration(duration):
-    match = re.fullmatch(
-        r"P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?",
-        duration if isinstance(duration, str) else "",
-    )
-    if not match:
-        return "0:00"
-
-    days, hours, minutes, seconds = (int(value or 0) for value in match.groups())
-    total_seconds = days * 86400 + hours * 3600 + minutes * 60 + seconds
-    return f"{total_seconds // 60}:{total_seconds % 60:02d}"
+    numbers = duration.split("s")[0]
+    if(numbers):
+        tupleNumbers = divmod(int(numbers),60)
+    else:
+        return {"00:00"}
+    return f"{tupleNumbers[0]}:{tupleNumbers[1]:02d}"
 
 @app.route("/styles.css")
 def styles():
@@ -45,13 +42,22 @@ def getDices():
             musicInfo = []
             privateCount = 0
             nextPageToken = ""
+            reqPlaylistInfo = requests.get(ytbPlaylistInfo,params={
+                "part": "snippet", "key": youtubeKey, "id": listId
+            });
+            if(not reqPlaylistInfo.ok):
+                return {"errorInfo":reqPlaylistInfo.status_code}
+            resPlaylistInfo = reqPlaylistInfo.json()
+            contentInfo = resPlaylistInfo.get("items",[])
+            if contentInfo: playlistTitle = contentInfo[0].get("snippet",[]).get("title","")
             while True:
+
                 parameters = {
                     "part": "snippet", "playlistId": listId, "key": youtubeKey, "maxResults": 50
                 }
                 if nextPageToken != "":
-                    parameters["pageToken"] = nextPageToken  
-                req = requests.get(ytbUrl, params=parameters)
+                    parameters["pageToken"] = nextPageToken
+                req = requests.get(ytbPlaylistItems, params=parameters)
                 req.raise_for_status()
                 res = req.json()
                 items = res.get("items", [])
@@ -78,7 +84,7 @@ def getDices():
                 
                 if musicsIds:
                     oneStringvdId = ','.join(musicsIds)
-                    req_stats = requests.get(ytbUrl2, params={
+                    req_stats = requests.get(ytbVideosInfo, params={
                         "part": "statistics,contentDetails", "key": youtubeKey, "id": oneStringvdId
                     })
                     req_stats.raise_for_status()
@@ -110,6 +116,7 @@ def getDices():
             musicCount = channelValues.values.tolist()
             
             dices = {
+                "ytbPlaylistTitle":playlistTitle,
                 "listOfDices": listedDices,
                 "privateContent": privateCount,
                 "graphicDices": {

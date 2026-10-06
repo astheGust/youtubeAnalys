@@ -1,159 +1,128 @@
 <!doctype html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Playlist Análise</title>
-    <script>
-      document.documentElement.dataset.theme =
-        localStorage.getItem("playlist-theme") === "dark" ? "dark" : "light";
-    </script>
-    <link rel="stylesheet" href="/styles.css" />
-    <script src="logic.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script
-      src="https://kit.fontawesome.com/75dd7735cf.js"
-      crossorigin="anonymous"
-    ></script>
-  </head>
 
-  <body>
-    <main>
-      <section class="search-section">
-        <form id="searchForm" class="search-form" action="#" method="get">
-          <input
-            id="url"
-            type="url"
-            name="url"
-            placeholder="Cole a URL do YouTube aqui..."
-            required
-          />
-          <button type="submit">Analisar</button>
-        </form>
-      </section>
-      <div id="loading"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playlist Análise</title>
+  <script>
+    document.documentElement.dataset.theme =
+      localStorage.getItem("playlist-theme") === "dark" ? "dark" : "light";
+  </script>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="logic.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://kit.fontawesome.com/75dd7735cf.js" crossorigin="anonymous"></script>
+</head>
 
-      <div id="excludedWarning">
-        <button id="exclamIcon" type="button" aria-label="Mostrar aviso de músicas indisponíveis" aria-expanded="false" aria-controls="excludedCount">
-          <i class="fa-solid fa-exclamation" aria-hidden="true"></i>
-        </button>
-        <span id="excludedCount" aria-hidden="true"></span>
-      </div>
+<body>
+  <main>
+    <section class="search-section">
+      <form id="searchForm" class="search-form" action="#" method="get">
+        <input id="url" type="url" name="url" placeholder="Cole a URL do YouTube aqui..." required />
+        <button type="submit">Analisar</button>
+      </form>
+    </section>
+    <div id="loading"></div>
 
-      <article id="results" class="results">
-        <section class="cards-section">
-          <div class="cards-list">
-            <div class="sort-bar">
-              <span class="sort-bar__label">listar por:</span>
-              <div class="sort-menu-wrapper">
-                <button
-                  id="sortToggle"
-                  class="sort-toggle"
-                  type="button"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                  aria-controls="sortMenu"
-                >
-                  <i class="fa-solid fa-bars" aria-hidden="true"></i>
-                  <span id="sortToggleText">Padrão</span>
-                  <i
-                    class="fa-solid fa-chevron-down sort-toggle__caret"
-                    aria-hidden="true"
-                  ></i>
+    <div id="excludedWarning">
+      <button id="exclamIcon" type="button" aria-label="Mostrar aviso de músicas indisponíveis" aria-expanded="false"
+        aria-controls="excludedCount">
+        <i class="fa-solid fa-exclamation" aria-hidden="true"></i>
+      </button>
+      <span id="excludedCount" aria-hidden="true"></span>
+    </div>
+
+    <div id="analyzedUrl" class="analyzed-url" aria-live="polite">
+      <a>
+      </a>
+    </div>
+
+    <article id="results" class="results">
+      <section class="cards-section">
+        <div class="cards-list">
+          <div class="sort-bar">
+            <span class="sort-bar__label">listar por:</span>
+            <div class="sort-menu-wrapper">
+              <button id="sortToggle" class="sort-toggle" type="button" aria-haspopup="true" aria-expanded="false"
+                aria-controls="sortMenu">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                <span id="sortToggleText">Padrão</span>
+                <i class="fa-solid fa-chevron-down sort-toggle__caret" aria-hidden="true"></i>
+              </button>
+              <div id="sortMenu" class="sort-menu" role="menu" aria-labelledby="sortToggle">
+                <button class="sort-menu__item is-active" type="button" role="menuitem" data-sort="default">
+                  <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                  <span>Padrão</span>
                 </button>
-                <div
-                  id="sortMenu"
-                  class="sort-menu"
-                  role="menu"
-                  aria-labelledby="sortToggle"
-                >
-                  <button
-                    class="sort-menu__item is-active"
-                    type="button"
-                    role="menuitem"
-                    data-sort="default"
-                  >
-                    <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
-                    <span>Padrão</span>
-                  </button>
-                  <button
-                    class="sort-menu__item"
-                    type="button"
-                    role="menuitem"
-                    data-sort="artist"
-                  >
-                    <i class="fa-solid fa-user" aria-hidden="true"></i>
-                    <span>Artista A-Z</span>
-                  </button>
-                  <button
-                    class="sort-menu__item"
-                    type="button"
-                    role="menuitem"
-                    data-sort="music"
-                  >
-                    <i class="fa-solid fa-music" aria-hidden="true"></i>
-                    <span>Música A-Z</span>
-                  </button>
-                </div>
+                <button class="sort-menu__item" type="button" role="menuitem" data-sort="artist">
+                  <i class="fa-solid fa-user" aria-hidden="true"></i>
+                  <span>Artista A-Z</span>
+                </button>
+                <button class="sort-menu__item" type="button" role="menuitem" data-sort="music">
+                  <i class="fa-solid fa-music" aria-hidden="true"></i>
+                  <span>Música A-Z</span>
+                </button>
               </div>
             </div>
-            <header class="cards-header">
-              <span class="cards-header__image" aria-hidden="true"></span>
-              <span class="cards-header__title">Título</span>
-              <span class="cards-header__channel">Canal</span>
-            </header>
           </div>
+          <header class="cards-header">
+            <span class="cards-header__image" aria-hidden="true"></span>
+            <span class="cards-header__title">Título</span>
+            <span class="cards-header__channel">Canal</span>
+          </header>
+        </div>
+      </section>
+      <section class="info-section">
+        <section class="options-section">
+          <span id="optionsTitle">Dados</span>
         </section>
-        <section class="info-section">
-          <section class="options-section">
-            <span id="optionsTitle">Dados</span>
-          </section>
-          <section class="graphic-data-content" aria-label="Análise da playlist" aria-live="polite">
-            <div class="carousel-viewport">
-              <div id="carouselTrack" class="carousel-track">
-                <section class="carousel-slide" role="group" aria-label="Músicas por artista">
-                  <h2>Músicas por artista</h2>
-                  <div class="chart-content">
-                    <div class="chart-box"><canvas id="artistChart" class="radialGraphic"></canvas></div>
-                    <div id="artistLegend" class="graphicSub"></div>
-                  </div>
-                </section>
-                <section class="carousel-slide" role="group" aria-label="Músicas por gênero" aria-hidden="true">
-                  <h2>Músicas por gênero</h2>
-                  <div class="chart-content">
-                    <div class="chart-box"><canvas id="genreChart" class="radialGraphic"></canvas></div>
-                    <div id="genreLegend" class="graphicSub"></div>
-                  </div>
-                </section>
-                <section class="carousel-slide" role="group" aria-label="Duração das músicas" aria-hidden="true">
-                  <h2>Duração</h2>
-                  <div id="durationExtremes" class="extreme-grid"></div>
-                </section>
-                <section class="carousel-slide" role="group" aria-label="Visualizações das músicas" aria-hidden="true">
-                  <h2>Visualizações</h2>
-                  <div id="viewsExtremes" class="extreme-grid"></div>
-                </section>
-              </div>
+        <section class="graphic-data-content" aria-label="Análise da playlist" aria-live="polite">
+          <div class="carousel-viewport">
+            <div id="carouselTrack" class="carousel-track">
+              <section class="carousel-slide" role="group" aria-label="Músicas por artista">
+                <h2>Músicas por artista</h2>
+                <div class="chart-content">
+                  <div class="chart-box"><canvas id="artistChart" class="radialGraphic"></canvas></div>
+                  <div id="artistLegend" class="graphicSub"></div>
+                </div>
+              </section>
+              <section class="carousel-slide" role="group" aria-label="Músicas por gênero" aria-hidden="true">
+                <h2>Músicas por gênero</h2>
+                <div class="chart-content">
+                  <div class="chart-box"><canvas id="genreChart" class="radialGraphic"></canvas></div>
+                  <div id="genreLegend" class="graphicSub"></div>
+                </div>
+              </section>
+              <section class="carousel-slide" role="group" aria-label="Duração das músicas" aria-hidden="true">
+                <h2>Duração</h2>
+                <div id="durationExtremes" class="extreme-grid"></div>
+              </section>
+              <section class="carousel-slide" role="group" aria-label="Visualizações das músicas" aria-hidden="true">
+                <h2>Visualizações</h2>
+                <div id="viewsExtremes" class="extreme-grid"></div>
+              </section>
             </div>
-            <nav class="carousel-indicators" aria-label="Navegação pelas seções">
-              <button class="carousel-indicator is-active" type="button" data-slide-index="0" aria-label="Gráfico: músicas por artista" aria-current="step"><span></span></button>
-              <button class="carousel-indicator" type="button" data-slide-index="1" aria-label="Gráfico: músicas por gênero"><span></span></button>
-              <button class="carousel-indicator" type="button" data-slide-index="2" aria-label="Duração maior e menor"><span></span></button>
-              <button class="carousel-indicator" type="button" data-slide-index="3" aria-label="Visualizações maior e menor"><span></span></button>
-            </nav>
-          </section>
+          </div>
+          <nav class="carousel-indicators" aria-label="Navegação pelas seções">
+            <button class="carousel-indicator is-active" type="button" data-slide-index="0"
+              aria-label="Gráfico: músicas por artista" aria-current="step"><span></span></button>
+            <button class="carousel-indicator" type="button" data-slide-index="1"
+              aria-label="Gráfico: músicas por gênero"><span></span></button>
+            <button class="carousel-indicator" type="button" data-slide-index="2"
+              aria-label="Duração maior e menor"><span></span></button>
+            <button class="carousel-indicator" type="button" data-slide-index="3"
+              aria-label="Visualizações maior e menor"><span></span></button>
+          </nav>
         </section>
-      </article>
-    </main>
+      </section>
+    </article>
+  </main>
 
-    <button
-      id="themeToggle"
-      class="theme-toggle"
-      type="button"
-      aria-pressed="false"
-    >
-      <i id="themeToggleIcon" class="fa-solid fa-moon" aria-hidden="true"></i>
-      <span id="themeToggleText">Dark</span>
-    </button>
-  </body>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+    <i id="themeToggleIcon" class="fa-solid fa-moon" aria-hidden="true"></i>
+    <span id="themeToggleText">Dark</span>
+  </button>
+</body>
+
 </html>

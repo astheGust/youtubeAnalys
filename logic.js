@@ -1,5 +1,6 @@
 const querySearch = document.getElementById("searchForm")
 const resultSection = document.getElementById("results")
+const analyzedUrl = document.getElementById("analyzedUrl")
 const cardsList = document.querySelector(".cards-list")
 const loading = document.getElementById("loading")
 const sortToggle = document.getElementById("sortToggle")
@@ -16,6 +17,7 @@ if (querySearch) {
         e.preventDefault()
         const urlValue = querySearch.elements.namedItem("url").value.trim()
         clearContent()
+        analyzedUrl.querySelector("a").href = urlValue
         const playlistId = new URL(urlValue).searchParams.get("list")
         if (!playlistId) {
             showAnalysisError("A URL não contém o identificador de uma playlist.")
@@ -29,6 +31,7 @@ if (querySearch) {
             if (!playlistResponse.ok) {
                 throw new Error(playlistResult.err || "Não foi possível analisar a playlist.")
             }
+            console.log(playlistResult)
 
             playlistData = Array.isArray(playlistResult.listOfDices) ? playlistResult.listOfDices : []
             playlistData.forEach((item) => showContent(item.title, item.channel, item.portrait_url))
@@ -48,7 +51,11 @@ if (querySearch) {
             if (playlistResult.privateContent) {
                 showWarning(`Sua playlist possui ${playlistResult.privateContent} músicas indisponíveis`)
             }
+            analyzedUrl.querySelector("a").textContent = `Playlist: ${playlistResult.ytbPlaylistTitle}`
+            querySearch.elements.namedItem("url").value = ""
             resultSection.classList.add("is-visible")
+            analyzedUrl.classList.add("is-visible")
+
         } catch (err) {
             showAnalysisError(err.message || "Ocorreu um erro ao analisar a playlist.")
         } finally {
@@ -161,6 +168,8 @@ function getRandomColor() {
 function clearContent() {
     resetWarning()
     resultSection.classList.remove("is-visible")
+    analyzedUrl.classList.remove("is-visible")
+    analyzedUrl.querySelector("a").textContent = ""
     if (cardsList) {
         cardsList.querySelectorAll(".card").forEach((c) => c.remove())
     }
@@ -278,21 +287,21 @@ function renderExtremes(containerId, items, valueKey, valueLabel, formatter) {
 
     const shortest = validItems.reduce((minimum, current) => current.value < minimum.value ? current : minimum)
     const longest = validItems.reduce((maximum, current) => current.value > maximum.value ? current : maximum)
-    ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
-        const card = document.createElement("article")
-        card.className = "extreme-item"
-        const label = document.createElement("span")
-        label.className = "extreme-label"
-        label.textContent = heading
-        const title = document.createElement("h3")
-        title.textContent = entry.item.title || "Música sem título"
-        const artist = document.createElement("p")
-        artist.textContent = entry.item.channel || "Artista desconhecido"
-        const value = document.createElement("strong")
-        value.textContent = formatter.display(entry.value)
-        card.append(label, title, artist, value)
-        container.appendChild(card)
-    })
+        ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
+            const card = document.createElement("article")
+            card.className = "extreme-item"
+            const label = document.createElement("span")
+            label.className = "extreme-label"
+            label.textContent = heading
+            const title = document.createElement("h3")
+            title.textContent = entry.item.title || "Música sem título"
+            const artist = document.createElement("p")
+            artist.textContent = entry.item.channel || "Artista desconhecido"
+            const value = document.createElement("strong")
+            value.textContent = formatter.display(entry.value)
+            card.append(label, title, artist, value)
+            container.appendChild(card)
+        })
 }
 
 function renderCarousel(artistData, genreData, items) {
