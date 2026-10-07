@@ -118,7 +118,7 @@ def getDices():
             dices = {
                 "ytbPlaylistTitle":playlistTitle,
                 "listOfDices": listedDices,
-                "privateContent": privateCount,
+                "privateContent": privateCount+1,
                 "graphicDices": {
                     "labels": artists,
                     "data": musicCount

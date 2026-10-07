@@ -1,6 +1,7 @@
 const querySearch = document.getElementById("searchForm")
 const resultSection = document.getElementById("results")
 const analyzedUrl = document.getElementById("analyzedUrl")
+const listSortBar = document.querySelector(".sort-bar")
 const cardsList = document.querySelector(".cards-list")
 const loading = document.getElementById("loading")
 const sortToggle = document.getElementById("sortToggle")
@@ -8,6 +9,7 @@ const sortToggleText = document.getElementById("sortToggleText")
 const sortMenu = document.getElementById("sortMenu")
 const carouselTrack = document.getElementById("carouselTrack")
 const carouselIndicators = document.querySelector(".carousel-indicators")
+
 let playlistData = []
 let chartInstances = []
 let activeSlide = 0
@@ -49,8 +51,9 @@ if (querySearch) {
 
             renderCarousel(playlistResult.graphicDices, genreResult, playlistData)
             if (playlistResult.privateContent) {
-                showWarning(`Sua playlist possui ${playlistResult.privateContent} músicas indisponíveis`)
+                showWarning(`Sua playlist possui ${playlistResult.privateContent} música(s) indisponível`)
             }
+            listSortBar.querySelector(".sort-bar__countLabel").textContent = `${playlistResult.listOfDices.length} Itens`
             analyzedUrl.querySelector("a").textContent = `Playlist: ${playlistResult.ytbPlaylistTitle}`
             querySearch.elements.namedItem("url").value = ""
             resultSection.classList.add("is-visible")
@@ -287,9 +290,10 @@ function renderExtremes(containerId, items, valueKey, valueLabel, formatter) {
 
     const shortest = validItems.reduce((minimum, current) => current.value < minimum.value ? current : minimum)
     const longest = validItems.reduce((maximum, current) => current.value > maximum.value ? current : maximum)
-        ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
+            ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
             const card = document.createElement("article")
             card.className = "extreme-item"
+                card.classList.add(heading === "Maior" ? "extreme-item--maximum" : "extreme-item--minimum")
             const label = document.createElement("span")
             label.className = "extreme-label"
             label.textContent = heading
@@ -299,7 +303,23 @@ function renderExtremes(containerId, items, valueKey, valueLabel, formatter) {
             artist.textContent = entry.item.channel || "Artista desconhecido"
             const value = document.createElement("strong")
             value.textContent = formatter.display(entry.value)
-            card.append(label, title, artist, value)
+
+            const details = document.createElement("div")
+            details.className = "extreme-item__details"
+            details.append(label, title, artist, value)
+
+            const portraitUrl = entry.item.portrait_url
+            if (portraitUrl) {
+                const portrait = document.createElement("img")
+                portrait.className = "extreme-item__portrait"
+                portrait.src = portraitUrl
+                portrait.alt = `Imagem de ${entry.item.title || "música sem título"}`
+                portrait.loading = "lazy"
+                if (heading === "Maior") card.append(portrait, details)
+                else card.append(details, portrait)
+            } else {
+                card.append(details)
+            }
             container.appendChild(card)
         })
 }

@@ -42,6 +42,7 @@
       <section class="cards-section">
         <div class="cards-list">
           <div class="sort-bar">
+            <span class="sort-bar__countLabel"></span>
             <span class="sort-bar__label">listar por:</span>
             <div class="sort-menu-wrapper">
               <button id="sortToggle" class="sort-toggle" type="button" aria-haspopup="true" aria-expanded="false"
@@ -81,25 +82,33 @@
           <div class="carousel-viewport">
             <div id="carouselTrack" class="carousel-track">
               <section class="carousel-slide" role="group" aria-label="Músicas por artista">
-                <h2>Músicas por artista</h2>
+                <header class="carousel-slide-header">
+                  <h2>Músicas por artista</h2>
+                </header>
                 <div class="chart-content">
                   <div class="chart-box"><canvas id="artistChart" class="radialGraphic"></canvas></div>
                   <div id="artistLegend" class="graphicSub"></div>
                 </div>
               </section>
               <section class="carousel-slide" role="group" aria-label="Músicas por gênero" aria-hidden="true">
-                <h2>Músicas por gênero</h2>
+                <header class="carousel-slide-header">
+                  <h2>Músicas por gênero</h2>
+                </header>
                 <div class="chart-content">
                   <div class="chart-box"><canvas id="genreChart" class="radialGraphic"></canvas></div>
                   <div id="genreLegend" class="graphicSub"></div>
                 </div>
               </section>
               <section class="carousel-slide" role="group" aria-label="Duração das músicas" aria-hidden="true">
-                <h2>Duração</h2>
+                <header class="carousel-slide-header">
+                  <h2>Duração</h2>
+                </header>
                 <div id="durationExtremes" class="extreme-grid"></div>
               </section>
               <section class="carousel-slide" role="group" aria-label="Visualizações das músicas" aria-hidden="true">
-                <h2>Visualizações</h2>
+                <header class="carousel-slide-header">
+                  <h2>Visualizações</h2>
+                </header>
                 <div id="viewsExtremes" class="extreme-grid"></div>
               </section>
             </div>
