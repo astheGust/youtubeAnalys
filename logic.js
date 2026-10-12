@@ -49,12 +49,21 @@ if (querySearch) {
                 throw new Error(genreResult.err || "Não foi possível analisar os gêneros.")
             }
 
+            const totalViews = playlistData.reduce((highest, item) => Math.max(highest, Number(item.viewsCount) || 0), 0)
+            const playlistTitle = document.getElementById("playlistTitle")
+            const songCount = document.getElementById("songCount")
+            const genreCount = document.getElementById("genreCount")
+            const viewsCount = document.getElementById("viewsCount")
+            if (playlistTitle) playlistTitle.textContent = playlistResult.ytbPlaylistTitle || "Playlist analisada"
+            if (songCount) songCount.textContent = playlistData.length
+            if (genreCount) genreCount.textContent = Array.isArray(genreResult.labels) ? genreResult.labels.length : 0
+            if (viewsCount) viewsCount.textContent = new Intl.NumberFormat("pt-BR").format(totalViews)
             renderCarousel(playlistResult.graphicDices, genreResult, playlistData)
             if (playlistResult.privateContent) {
                 showWarning(`Sua playlist possui ${playlistResult.privateContent} música(s) indisponível`)
             }
             listSortBar.querySelector(".sort-bar__countLabel").textContent = `${playlistResult.listOfDices.length} Itens`
-            analyzedUrl.querySelector("a").textContent = `Playlist: ${playlistResult.ytbPlaylistTitle}`
+            analyzedUrl.querySelector("a").textContent = `Ir para ${playlistResult.ytbPlaylistTitle}`
             querySearch.elements.namedItem("url").value = ""
             resultSection.classList.add("is-visible")
             analyzedUrl.classList.add("is-visible")
@@ -117,7 +126,6 @@ function applySort(sortKey = "default") {
 
     const sorted = [...list]
     if (sortKey === "artist") {
-        //channel
         sorted.sort((a, b) =>
             String(a.channel).localeCompare(String(b.channel), "pt-BR", {
                 sensitivity: "base",
@@ -125,7 +133,6 @@ function applySort(sortKey = "default") {
             })
         )
     } else if (sortKey === "music") {
-        //title
         sorted.sort((a, b) =>
             String(a.title).localeCompare(String(b.title), "pt-BR", {
                 sensitivity: "base",
@@ -156,7 +163,6 @@ function resetSortState() {
     if (sortToggleText) sortToggleText.textContent = "Padrão"
 }
 
-//inicializa os eventos da barra de ordenação
 setupSorting()
 
 function getRandomColor() {
@@ -290,10 +296,10 @@ function renderExtremes(containerId, items, valueKey, valueLabel, formatter) {
 
     const shortest = validItems.reduce((minimum, current) => current.value < minimum.value ? current : minimum)
     const longest = validItems.reduce((maximum, current) => current.value > maximum.value ? current : maximum)
-            ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
+        ;[["Maior", longest], ["Menor", shortest]].forEach(([heading, entry]) => {
             const card = document.createElement("article")
             card.className = "extreme-item"
-                card.classList.add(heading === "Maior" ? "extreme-item--maximum" : "extreme-item--minimum")
+            card.classList.add(heading === "Maior" ? "extreme-item--maximum" : "extreme-item--minimum")
             const label = document.createElement("span")
             label.className = "extreme-label"
             label.textContent = heading
@@ -359,6 +365,10 @@ carouselIndicators.addEventListener("click", (event) => {
     if (indicator) updateCarousel(Number(indicator.dataset.slideIndex))
 })
 
+document.querySelectorAll("[data-move]").forEach((button) => {
+    button.addEventListener("click", () => updateCarousel(activeSlide + (button.dataset.move === "next" ? 1 : -1)))
+})
+
 const divWarning = document.getElementById("excludedWarning")
 const divText = document.getElementById("excludedCount")
 const exclamationIcon = document.getElementById("exclamIcon")
@@ -410,23 +420,19 @@ if (exclamationIcon && divWarning && divText) {
     divWarning.addEventListener("mouseleave", scheduleWarningHide)
 }
 
-//Tema Claro/Escuro
 const THEME_KEY = "playlist-theme"
 const themeToggle = document.getElementById("themeToggle")
 const themeToggleIcon = document.getElementById("themeToggleIcon")
-const themeToggleText = document.getElementById("themeToggleText")
 
 function updateThemeButton(theme) {
     const isDark = theme === "dark"
     if (themeToggleIcon) {
         themeToggleIcon.className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon"
     }
-    if (themeToggleText) {
-        themeToggleText.textContent = isDark ? "Light" : "Dark"
-    }
     if (themeToggle) {
         themeToggle.setAttribute("aria-pressed", String(isDark))
-        themeToggle.title = isDark ? "Mudar para tema claro" : "Mudar para tema escuro"
+        themeToggle.title = isDark ? "Ativar modo claro" : "Ativar modo noturno"
+        themeToggle.setAttribute("aria-label", themeToggle.title)
     }
 }
 

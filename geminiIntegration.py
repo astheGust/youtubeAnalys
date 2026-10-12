@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 def processInfo(allInfo):
-    infoLength = 30
+    infoLength = 25
     infoContainer = [allInfo[i:i + infoLength] for i in range(0, len(allInfo), infoLength)]
     finalResults = {}
     for index, info in enumerate(infoContainer):
