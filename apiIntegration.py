@@ -1,10 +1,10 @@
 from flask import Flask,jsonify,send_from_directory,render_template,request
 from flask_cors import CORS
-import requests,re
+import requests
 import pandas as pd
 from dotenv import load_dotenv
 import os
-from geminiIntegration import processInfo
+from geminiIntegration import  analisar_estilo_playlist
 load_dotenv()
 youtubeKey = os.getenv("API_KEY")
 app = Flask(__name__)
@@ -143,15 +143,9 @@ def genreDices():
     genAi = request.json
     if genAi != "":
         try:
-            genreDict = processInfo(genAi)
-            genPd = pd.Series(genreDict.values())
-            count = genPd.value_counts()
-            labels = count.index.tolist()
-            quantity = count.values.tolist()
-            dices = {
-                "labels":labels,
-                "data":quantity}
-            return jsonify(dices)
+            genreDict =  analisar_estilo_playlist(genAi)
+            print(genreDict)
+            return jsonify(genreDict)
         except Exception as err:
             print("Erro ao processar requisição:", err)
             return jsonify({"err": "Erro ao processar dados da IA"}), 500

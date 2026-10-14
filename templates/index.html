@@ -1,4 +1,3 @@
-  <script>document.documentElement.dataset.theme = localStorage.getItem("playlist-theme") || "light"</script>
 <!doctype html>
 <html lang="pt-BR">
 
@@ -34,7 +33,6 @@
       <div class="playlist-name"><span>PLAYLIST</span><strong id="playlistTitle">Sua playlist analisada</strong><a
           href="#" target="_blank" rel="noreferrer">Abrir no YouTube Music</a></div>
       <div class="summary-stat"><span>Músicas</span><strong id="songCount">0</strong></div>
-      <div class="summary-stat"><span>Gêneros</span><strong id="genreCount">0</strong></div>
       <div class="summary-stat wide"><span>Mais vista</span><strong id="viewsCount">0</strong></div>
     </section>
     <article id="results" class="results">
@@ -59,23 +57,14 @@
               <section class="carousel-slide" role="group" aria-label="Músicas por artista">
                 <header class="carousel-slide-header">
                   <h2>Músicas por artista</h2>
-                  <div class="carousel-arrows"><button type="button" data-move="previous">‹</button><button
-                      type="button" data-move="next">›</button></div>
+                  <div class="chart-mode-switch" role="group" aria-label="Tipo de gráfico">
+                    <button class="chart-mode-button is-active" type="button" data-chart-mode="less" aria-pressed="true">Rosca</button>
+                    <button class="chart-mode-button" type="button" data-chart-mode="more" aria-pressed="false">Barras + linha</button>
+                  </div>
                 </header>
                 <div class="chart-content">
                   <div class="chart-box"><canvas id="artistChart"></canvas></div>
                   <div id="artistLegend" class="graphicSub"></div>
-                </div>
-              </section>
-              <section class="carousel-slide" role="group" aria-label="Músicas por gênero" aria-hidden="true">
-                <header class="carousel-slide-header">
-                  <h2>Músicas por gênero</h2>
-                  <div class="carousel-arrows"><button type="button" data-move="previous">‹</button><button
-                      type="button" data-move="next">›</button></div>
-                </header>
-                <div class="chart-content">
-                  <div class="chart-box"><canvas id="genreChart"></canvas></div>
-                  <div id="genreLegend" class="graphicSub"></div>
                 </div>
               </section>
               <section class="carousel-slide" role="group" aria-label="Duração" aria-hidden="true">
@@ -95,8 +84,16 @@
           <nav class="carousel-indicators" aria-label="Navegação pelas seções"><button
               class="carousel-indicator is-active" type="button" data-slide-index="0"><span></span></button><button
               class="carousel-indicator" type="button" data-slide-index="1"><span></span></button><button
-              class="carousel-indicator" type="button" data-slide-index="2"><span></span></button><button
-              class="carousel-indicator" type="button" data-slide-index="3"><span></span></button></nav>
+              class="carousel-indicator" type="button" data-slide-index="2"><span></span></button></nav>
+          <section class="genre-summary" aria-label="Estilo musical da playlist" aria-live="polite">
+            <h3>Estilo da playlist</h3>
+            <div id="genreSummaryLoader" class="genre-summary-loader" role="status" hidden>
+              <div class="genre-loading-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p>carregando análise...</p>
+            </div>
+            <p id="genreSummary" hidden></p>
+            <p id="genreSummaryNote" class="genre-summary-note" hidden>Essa análise está sujeita a mudanças devido ao método.</p>
+          </section>
         </div>
       </section>
     </article>
